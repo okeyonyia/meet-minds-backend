@@ -4,19 +4,27 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
-import { ProfileModule } from './profile/profile.module';
+import { UserModule } from './user/user.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // Make the config module globally available
-      envFilePath: '.env', // Specify the .env file
+      isGlobal: true,
+      envFilePath: '.env',
     }),
     MongooseModule.forRoot(process.env.MONGO_CONNECTION_STRING),
     AuthModule,
-    ProfileModule
+    UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}
