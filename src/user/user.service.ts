@@ -39,30 +39,40 @@ export class UserService {
       if (users.length === 0) {
         throw new NotFoundException('No users found.');
       }
-
       return { message: 'Users retrieved successfully.', data: users };
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new InternalServerErrorException('Failed to fetch users.');
     }
   }
 
-  async findOneUser(
-    id: string,
+  async findOneUserByKey(
+    key: 'id' | 'uid',
+    value: string,
   ): Promise<{ message: string; data: UserDocument }> {
     try {
+      const query = key === 'id' ? { _id: value } : { uid: value };
       const foundUser = await this.userModel
-        .findById(id)
+        .findOne(query)
         .populate('profile')
         .exec();
 
       if (!foundUser) {
-        throw new NotFoundException(`User with ID ${id} not found.`);
+        throw new NotFoundException(
+          `User with ${key.toUpperCase()} ${value} not found.`,
+        );
       }
 
       return { message: 'User retrieved successfully.', data: foundUser };
     } catch (error) {
-      if (error.name === 'CastError') {
-        throw new BadRequestException(`Invalid User ID: ${id}`);
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
+        throw new BadRequestException(
+          `Invalid User ${key.toUpperCase()}: ${value}`,
+        );
       }
       throw new InternalServerErrorException('Failed to fetch user.');
     }
@@ -84,7 +94,9 @@ export class UserService {
 
       return { message: 'User updated successfully.', data: updatedUser };
     } catch (error) {
-      if (error.name === 'CastError') {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
         throw new BadRequestException(`Invalid User ID: ${id}`);
       }
       throw new InternalServerErrorException('Failed to update user.');
@@ -103,7 +115,9 @@ export class UserService {
 
       return { message: 'User deleted successfully.', data: deletedUser };
     } catch (error) {
-      if (error.name === 'CastError') {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
         throw new BadRequestException(`Invalid User ID: ${id}`);
       }
       throw new InternalServerErrorException('Failed to delete user.');
