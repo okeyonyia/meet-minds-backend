@@ -6,6 +6,7 @@ import {
   ArrayMinSize,
   IsPhoneNumber,
 } from 'class-validator';
+import { Types } from 'mongoose';
 
 export enum Gender {
   MALE = 'male',
@@ -15,9 +16,14 @@ export enum Gender {
 
 export class CreateProfileDto {
   @IsString()
+  user_id: Types.ObjectId;
+
+  @IsString()
   full_name: string;
 
-  @IsPhoneNumber()
+  @IsPhoneNumber('NG', {
+    message: 'phone_number must be a valid Nigerian phone number',
+  })
   phone_number: string;
 
   @IsDate()

@@ -1,11 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Gender } from '../dto/create-profile.dto';
 
 export type ProfileDocument = Profile & Document;
 
 @Schema({ timestamps: true })
 export class Profile {
+  _id: Types.ObjectId; // Declare _id explicitly in TypeScript for type safety
+
   @Prop({ required: true })
   full_name: string;
 
