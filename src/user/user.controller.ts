@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -25,9 +26,15 @@ export class UserController {
     return this.userService.findAllUsers();
   }
 
-  @Get(':id')
-  async findOneUser(@Param('id') id: string) {
-    return this.userService.findOneUser(id);
+  @Get(':key/:value')
+  async findOneUser(
+    @Param('key') key: 'id' | 'uid',
+    @Param('value') value: string,
+  ) {
+    if (key !== 'id' && key !== 'uid') {
+      throw new BadRequestException('Invalid key. Use "id" or "uid".');
+    }
+    return this.userService.findOneUserByKey(key, value);
   }
 
   @Patch(':id')

@@ -9,54 +9,77 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModal: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Profile.name)
+    private profileModel: Model<ProfileDocument>,
+  ) {}
 
   async createUser(
     createUserDto: CreateUserDto,
   ): Promise<{ message: string; data: UserDocument }> {
     try {
-      const createdUser = await this.userModal.create(createUserDto);
-
+      const createdUser = new this.userModel(createUserDto);
       const savedUser = await createdUser.save();
+
       return { message: 'User created successfully.', data: savedUser };
     } catch (error) {
       if (error.code === 11000) {
-        throw new BadRequestException('User with this email already exists.');
+        throw new BadRequestException(
+          'User with this email or UID already exists.',
+        );
       }
-      throw new InternalServerErrorException('Failed to create User.');
+      throw new InternalServerErrorException('Failed to create user.');
     }
   }
 
   async findAllUsers(): Promise<{ message: string; data: UserDocument[] }> {
     try {
-      const users = await this.userModal.find().exec();
+      const users = await this.userModel.find().populate('profile').exec();
 
-      if (users.length == 0) {
+      if (users.length === 0) {
         throw new NotFoundException('No users found.');
       }
-
-      return { message: 'Users found Successfully.', data: users };
+      return { message: 'Users retrieved successfully.', data: users };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to fetch profiles.');
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch users.');
     }
   }
 
-  async findOneUser(
-    id: string,
+  async findOneUserByKey(
+    key: 'id' | 'uid',
+    value: string,
   ): Promise<{ message: string; data: UserDocument }> {
     try {
-      const foundedProfile = await this.userModal.findById(id).exec();
+      const query = key === 'id' ? { _id: value } : { uid: value };
+      const foundUser = await this.userModel
+        .findOne(query)
+        .populate('profile')
+        .exec();
 
-      if (!foundedProfile) {
-        throw new NotFoundException(`User with ID ${id} not found.`);
+      if (!foundUser) {
+        throw new NotFoundException(
+          `User with ${key.toUpperCase()} ${value} not found.`,
+        );
       }
 
-      return { message: 'User found Successfully.', data: foundedProfile };
+      return { message: 'User retrieved successfully.', data: foundUser };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to find user.');
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
+        throw new BadRequestException(
+          `Invalid User ${key.toUpperCase()}: ${value}`,
+        );
+      }
+      throw new InternalServerErrorException('Failed to fetch user.');
     }
   }
 
@@ -65,20 +88,23 @@ export class UserService {
     updateUserDto: UpdateUserDto,
   ): Promise<{ message: string; data: UserDocument }> {
     try {
-      const updatedUser = await this.userModal
+      const updatedUser = await this.userModel
         .findByIdAndUpdate(id, updateUserDto, { new: true })
+        .populate('profile')
         .exec();
 
       if (!updatedUser) {
         throw new NotFoundException(`User with ID ${id} not found.`);
       }
 
-      return { message: 'User updated Successfully.', data: updatedUser };
+      return { message: 'User updated successfully.', data: updatedUser };
     } catch (error) {
-      if (error.name === 'CastError') {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
         throw new BadRequestException(`Invalid User ID: ${id}`);
       }
-      throw new InternalServerErrorException('Failed to update User.');
+      throw new InternalServerErrorException('Failed to update user.');
     }
   }
 
@@ -86,18 +112,37 @@ export class UserService {
     id: string,
   ): Promise<{ message: string; data: UserDocument }> {
     try {
-      const deletedUser = await this.userModal.findByIdAndDelete(id).exec();
+      const user = await this.userModel.findById(id).exec();
 
-      if (!deletedUser) {
+      if (!user) {
         throw new NotFoundException(`User with ID ${id} not found.`);
       }
 
-      return { message: 'User deleted successfully', data: deletedUser };
-    } catch (error) {
-      if (error.name === 'CastError') {
-        throw new BadRequestException(`Invalid profile ID: ${id}`);
+      if (user.profile) {
+        const deletedProfile = await this.profileModel
+          .findByIdAndDelete(user.profile)
+          .exec();
+
+        if (!deletedProfile) {
+          console.warn(
+            `Profile with ID ${user.profile} not found during user deletion.`,
+          );
+        }
       }
-      throw new InternalServerErrorException('Failed to delete User.');
+
+      const deletedUser = await this.userModel.findByIdAndDelete(id).exec();
+
+      return {
+        message: `User and associated profile deleted successfully.`,
+        data: deletedUser,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
+        throw new BadRequestException(`Invalid User ID: ${id}`);
+      }
+      throw new InternalServerErrorException('Failed to delete user.');
     }
   }
 }
