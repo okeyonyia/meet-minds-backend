@@ -34,6 +34,20 @@ export class Profile {
 
   @Prop({ type: [String], required: true, min: 1 })
   profile_pictures: string[];
+
+  @Prop({
+    type: {
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+      address: { type: String, required: false },
+    },
+    required: false,
+  })
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

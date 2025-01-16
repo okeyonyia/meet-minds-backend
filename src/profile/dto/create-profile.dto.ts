@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsString,
   IsArray,
@@ -5,8 +6,10 @@ import {
   IsDate,
   ArrayMinSize,
   IsPhoneNumber,
+  ValidateNested,
+  IsOptional,
+  IsNumber,
 } from 'class-validator';
-import { Types } from 'mongoose';
 
 export enum Gender {
   MALE = 'male',
@@ -14,9 +17,21 @@ export enum Gender {
   NON_BINARY = 'nonbinary',
 }
 
+class LocationDto {
+  @IsNumber()
+  latitude: number;
+
+  @IsNumber()
+  longitude: number;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+}
+
 export class CreateProfileDto {
   @IsString()
-  user_id: Types.ObjectId;
+  user_id: string;
 
   @IsString()
   full_name: string;
@@ -50,4 +65,9 @@ export class CreateProfileDto {
   @ArrayMinSize(1)
   @IsString({ each: true })
   profile_pictures?: string[];
+
+  @ValidateNested()
+  @Type(() => LocationDto)
+  @IsOptional()
+  location?: LocationDto;
 }

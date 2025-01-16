@@ -24,7 +24,7 @@ export class ProfileService {
     try {
       const { user_id, ...profileData } = createProfileDto;
 
-      const user = await this.userModel.findById({ uid: user_id });
+      const user = await this.userModel.findOne({ uid: user_id });
       if (!user) {
         throw new NotFoundException(`User with UID ${user_id} not found.`);
       }

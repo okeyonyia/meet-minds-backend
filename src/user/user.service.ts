@@ -9,10 +9,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Profile.name)
+    private profileModel: Model<ProfileDocument>,
+  ) {}
 
   async createUser(
     createUserDto: CreateUserDto,
@@ -107,13 +112,30 @@ export class UserService {
     id: string,
   ): Promise<{ message: string; data: UserDocument }> {
     try {
-      const deletedUser = await this.userModel.findByIdAndDelete(id).exec();
+      const user = await this.userModel.findById(id).exec();
 
-      if (!deletedUser) {
+      if (!user) {
         throw new NotFoundException(`User with ID ${id} not found.`);
       }
 
-      return { message: 'User deleted successfully.', data: deletedUser };
+      if (user.profile) {
+        const deletedProfile = await this.profileModel
+          .findByIdAndDelete(user.profile)
+          .exec();
+
+        if (!deletedProfile) {
+          console.warn(
+            `Profile with ID ${user.profile} not found during user deletion.`,
+          );
+        }
+      }
+
+      const deletedUser = await this.userModel.findByIdAndDelete(id).exec();
+
+      return {
+        message: `User and associated profile deleted successfully.`,
+        data: deletedUser,
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
