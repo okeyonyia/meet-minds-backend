@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ProfileModule } from './profile/profile.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ProfileModule } from './profile/profile.module';
     AuthModule,
     UserModule,
     ProfileModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [

@@ -48,6 +48,9 @@ export class Profile {
     longitude: number;
     address?: string;
   };
+
+  @Prop({ type: [Types.ObjectId], ref: 'Event', required: false, default: [] })
+  events: Types.ObjectId[];
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);
