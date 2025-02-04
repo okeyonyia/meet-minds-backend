@@ -7,10 +7,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { JoinEventDto } from './dto/join-event.dto';
 
 @Controller('event')
 export class EventController {
@@ -37,9 +39,54 @@ export class EventController {
     };
   }
 
+  @Get('/id/:id')
+  async findAllEventsById(
+    @Param('id') id: string,
+    @Query('hosting') hosting?: string,
+    @Query('attending') attending?: string,
+  ) {
+    const isHosting = hosting === 'true';
+    const isAttending = attending === 'true';
+
+    const response = await this.eventService.findAllEventsById(
+      id,
+      isHosting,
+      isAttending,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
   @Get(':id')
   async findEventById(@Param('id') id: string) {
     const response = await this.eventService.findEventById(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
+  @Patch('join')
+  async joinEvent(@Body() joinEventDto: JoinEventDto) {
+    const response = await this.eventService.joinEvent(joinEventDto);
+    return {
+      statusCode: HttpStatus.OK,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
+  @Patch('unjoin/:eventId/:userId')
+  async unjoinEvent(
+    @Param('eventId') eventId: string,
+    @Param('userId') userId: string,
+  ) {
+    const response = await this.eventService.unjoinEvent(userId, eventId);
     return {
       statusCode: HttpStatus.OK,
       message: response.message,

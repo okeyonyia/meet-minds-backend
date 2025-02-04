@@ -37,8 +37,25 @@ export class Event {
   @Prop({ required: true, type: Number })
   no_of_attendees: number;
 
+  @Prop({ required: false, type: Number })
+  slots: number;
+
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Profile' }],
+    required: false,
+    default: [],
+  })
+  attendees: Types.ObjectId[];
+
   @Prop({ required: true, type: Boolean })
   is_public: boolean;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
+
+EventSchema.pre<EventDocument>('save', function (next) {
+  if (this.isNew && (this.slots === undefined || this.slots === null)) {
+    this.slots = this.no_of_attendees;
+  }
+  next();
+});

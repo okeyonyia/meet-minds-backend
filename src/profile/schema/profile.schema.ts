@@ -49,8 +49,15 @@ export class Profile {
     address?: string;
   };
 
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Event' }],
+    required: false,
+    default: [],
+  })
+  attending_events: Types.ObjectId[];
+
   @Prop({ type: [Types.ObjectId], ref: 'Event', required: false, default: [] })
-  events: Types.ObjectId[];
+  hosting_events: Types.ObjectId[];
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);
