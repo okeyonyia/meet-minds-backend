@@ -20,7 +20,6 @@ export class EventController {
 
   @Post()
   async createEvent(@Body() createEventDto: CreateEventDto) {
-    console.log('Create EventData inside Controller => ', createEventDto);
     const response = await this.eventService.createEvent(createEventDto);
     return {
       statusCode: HttpStatus.CREATED,
@@ -30,8 +29,8 @@ export class EventController {
   }
 
   @Get()
-  async findAllEvents() {
-    const response = await this.eventService.findAllEvents();
+  async findAllEvents(@Query() filters: { [key: string]: any }) {
+    const response = await this.eventService.findAllEvents(filters);
     return {
       statusCode: HttpStatus.OK,
       message: response.message,
@@ -64,6 +63,16 @@ export class EventController {
   @Get(':id')
   async findEventById(@Param('id') id: string) {
     const response = await this.eventService.findEventById(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
+  @Get('/attendees/:id')
+  async findAllAttendeesByEventId(@Param('id') id: string) {
+    const response = await this.eventService.findAllAttendeesByEventId(id);
     return {
       statusCode: HttpStatus.OK,
       message: response.message,

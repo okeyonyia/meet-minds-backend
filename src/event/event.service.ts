@@ -42,7 +42,13 @@ export class EventService {
 
       await newEvent.save();
 
-      return { message: 'Event Created Successfully', data: newEvent };
+      // Populating host info
+      const populatedEvent = await this.eventModel
+        .findById(newEvent._id)
+        .populate('host_id', 'full_name profile_pictures')
+        .exec();
+
+      return { message: 'Event Created Successfully', data: populatedEvent };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -52,9 +58,88 @@ export class EventService {
     }
   }
 
-  async findAllEvents(): Promise<{ message: string; data: Event[] }> {
+  async findAllEvents(
+    filters: { [key: string]: any } = {},
+  ): Promise<{ message: string; data: Event[] }> {
     try {
-      const events = await this.eventModel.find().exec();
+      let query: any = {};
+
+      // Dynamically construct the query based on passed filters
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          switch (key) {
+            case 'text':
+              const allFields = Object.keys(this.eventModel.schema.paths); // Get all schema fields
+
+              query.$or = allFields
+                .map((field) => {
+                  const fieldType =
+                    this.eventModel.schema.paths[field].instance;
+
+                  if (fieldType === 'String') {
+                    return { [field]: { $regex: value, $options: 'i' } };
+                  } else if (fieldType === 'Number') {
+                    const numValue = Number(value);
+                    return !isNaN(numValue) ? { [field]: numValue } : null;
+                  } else if (fieldType === 'Date') {
+                    const inputDate = new Date(value);
+                    if (!isNaN(inputDate.getTime())) {
+                      return {
+                        [field]: {
+                          $gte: new Date(value),
+                          $lte: new Date(value),
+                        },
+                      };
+                    }
+                    return null;
+                  }
+
+                  return null; // Skip other data types
+                })
+                .filter(Boolean); // Remove null values
+              break;
+
+            case 'capacity':
+              query.no_of_attendees = { $gte: Number(value) };
+              break;
+
+            case 'date':
+              if (value.match(/^\d{4}$/)) {
+                // If only a year is provided (e.g., "2025")
+                query.$or = [
+                  { start_date: { $regex: `^${value}-`, $options: 'i' } },
+                  { end_date: { $regex: `^${value}-`, $options: 'i' } },
+                ];
+              } else if (value.match(/^\d{4}-\d{2}$/)) {
+                // If year + month is provided (e.g., "2025-01")
+                query.$or = [
+                  { start_date: { $regex: `^${value}-`, $options: 'i' } },
+                  { end_date: { $regex: `^${value}-`, $options: 'i' } },
+                ];
+              } else {
+                // If a full date is provided (YYYY-MM-DD)
+                const searchDate = new Date(value);
+                query.$or = [
+                  { start_date: { $gte: searchDate } },
+                  { end_date: { $lte: searchDate } },
+                ];
+              }
+              break;
+
+            default:
+              // 🔹 Auto-apply regex for partial matching on all string fields
+              query[key] =
+                typeof value === 'string'
+                  ? { $regex: value, $options: 'i' }
+                  : value;
+          }
+        }
+      });
+
+      const events = await this.eventModel
+        .find(query)
+        .populate('host_id', 'full_name profile_pictures')
+        .exec();
       if (!events || events.length === 0) {
         return { message: 'No events found', data: [] };
       }
@@ -93,6 +178,7 @@ export class EventService {
 
       const events = await this.eventModel
         .find({ _id: { $in: eventIds } })
+        .populate('host_id', 'full_name profile_pictures')
         .exec();
 
       if (!events || events.length === 0) {
@@ -116,6 +202,31 @@ export class EventService {
     }
   }
 
+  async findAllAttendeesByEventId(
+    id: string,
+  ): Promise<{ message: string; data: Event }> {
+    try {
+      const event = await this.eventModel
+        .findById(id)
+        .populate('host_id', 'full_name profile_pictures')
+        .populate({
+          path: 'attendees',
+          model: 'Profile',
+          select: 'full_name location profile_pictures',
+          options: { slice: { profile_pictures: 1 } },
+        })
+        .exec();
+      if (!event) throw new NotFoundException('Event not found');
+
+      return { message: 'Attendees retrieved successfully', data: event };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error finding event');
+    }
+  }
+
   async updateEvent(
     id: string,
     updateEventDto: UpdateEventDto,
@@ -123,6 +234,7 @@ export class EventService {
     try {
       const updatedEvent = await this.eventModel
         .findByIdAndUpdate(id, updateEventDto, { new: true })
+        .populate('host_id', 'full_name profile_pictures')
         .exec();
       if (!updatedEvent) throw new NotFoundException('Event not found');
 
@@ -162,7 +274,10 @@ export class EventService {
         );
       }
 
-      const deletedEvent = await this.eventModel.findByIdAndDelete(id).exec();
+      const deletedEvent = await this.eventModel
+        .findByIdAndDelete(id)
+        .populate('host_id', 'full_name profile_pictures')
+        .exec();
 
       return { message: 'Event Deleted Successfully', data: deletedEvent };
     } catch (error) {
@@ -178,8 +293,10 @@ export class EventService {
   ): Promise<{ message: string; data: Event }> {
     const { eventId, profileId } = joinEventDto;
     try {
-      console.log('IN');
-      const event = await this.eventModel.findById(eventId).exec();
+      const event = await this.eventModel
+        .findById(eventId)
+        .populate('host_id', 'full_name profile_pictures')
+        .exec();
       if (!event) {
         throw new NotFoundException('Event not found');
       }
