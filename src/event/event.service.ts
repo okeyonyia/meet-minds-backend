@@ -179,6 +179,12 @@ export class EventService {
       const events = await this.eventModel
         .find({ _id: { $in: eventIds } })
         .populate('host_id', 'full_name profile_pictures')
+        .populate({
+          path: 'attendees',
+          model: 'Profile',
+          select: 'full_name location profile_pictures',
+          options: { slice: { profile_pictures: 1 } },
+        })
         .exec();
 
       if (!events || events.length === 0) {
@@ -193,7 +199,15 @@ export class EventService {
 
   async findEventById(id: string): Promise<{ message: string; data: Event }> {
     try {
-      const event = await this.eventModel.findById(id).exec();
+      const event = await this.eventModel
+        .findById(id)
+        .populate({
+          path: 'attendees',
+          model: 'Profile',
+          select: 'full_name location profile_pictures',
+          options: { slice: { profile_pictures: 1 } },
+        })
+        .exec();
       if (!event) throw new NotFoundException('Event not found');
 
       return { message: 'Event retrieved successfully', data: event };
