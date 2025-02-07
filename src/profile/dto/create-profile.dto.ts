@@ -17,7 +17,7 @@ export enum Gender {
   NON_BINARY = 'nonbinary',
 }
 
-class LocationDto {
+export class LocationDto {
   @IsNumber()
   latitude: number;
 

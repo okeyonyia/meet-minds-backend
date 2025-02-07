@@ -25,14 +25,25 @@ export class Event {
   @Prop({ required: true, type: Date })
   end_date: Date;
 
-  @Prop({ required: true })
-  location: string;
+  @Prop({
+    type: {
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+      address: { type: String, required: false },
+    },
+    required: false,
+  })
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
 
   @Prop({ required: true })
   cover_picture: string;
 
   @Prop({ required: true })
-  ticket: string;
+  ticket_price: number;
 
   @Prop({ required: true, type: Number })
   no_of_attendees: number;
@@ -41,7 +52,7 @@ export class Event {
   slots: number;
 
   @Prop({
-    type: [{ type: Types.ObjectId, ref: 'Profile' }],
+    type: [{ type: Types.ObjectId, ref: 'EventParticipation' }],
     required: false,
     default: [],
   })

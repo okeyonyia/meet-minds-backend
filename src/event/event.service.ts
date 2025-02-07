@@ -11,12 +11,17 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { Event, EventDocument } from './schema/event.schema';
 import { Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
 import { JoinEventDto } from './dto/join-event.dto';
+import { EventParticipationService } from 'src/event-participation/event-participation.service';
+import { EventParticipation } from 'src/event-participation/schema/event-participation.schema';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
+    @InjectModel(EventParticipation.name)
+    private eventParticipationModel: Model<EventDocument>,
+    private readonly eventParticipationService: EventParticipationService,
   ) {}
 
   async createEvent(
@@ -160,6 +165,7 @@ export class EventService {
         .findById(userId)
         .select('hosting_events attending_events')
         .exec();
+
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -181,7 +187,7 @@ export class EventService {
         .populate('host_id', 'full_name profile_pictures')
         .populate({
           path: 'attendees',
-          model: 'Profile',
+          model: 'EventParticipation',
           select: 'full_name location profile_pictures',
           options: { slice: { profile_pictures: 1 } },
         })
@@ -203,9 +209,12 @@ export class EventService {
         .findById(id)
         .populate({
           path: 'attendees',
-          model: 'Profile',
-          select: 'full_name location profile_pictures',
-          options: { slice: { profile_pictures: 1 } },
+          model: 'EventParticipation',
+          populate: {
+            path: 'profile',
+            model: 'Profile',
+            select: 'full_name location profile_pictures',
+          },
         })
         .exec();
       if (!event) throw new NotFoundException('Event not found');
@@ -225,9 +234,13 @@ export class EventService {
         .populate('host_id', 'full_name profile_pictures')
         .populate({
           path: 'attendees',
-          model: 'Profile',
-          select: 'full_name location profile_pictures',
-          options: { slice: { profile_pictures: 1 } },
+          model: 'EventParticipation',
+          populate: {
+            path: 'profile',
+            model: 'Profile',
+            select: 'full_name location profile_pictures',
+            options: { slice: { profile_pictures: 1 } },
+          },
         })
         .exec();
       if (!event) throw new NotFoundException('Event not found');
@@ -309,29 +322,37 @@ export class EventService {
     try {
       const event = await this.eventModel
         .findById(eventId)
-        .populate('host_id', 'full_name profile_pictures')
+        .populate({
+          path: 'attendees',
+          populate: {
+            path: 'profile',
+            select: 'full_name profile_pictures',
+          },
+        })
+        .populate({
+          path: 'host_id',
+          select: 'full_name profile_pictures',
+        })
         .exec();
+
       if (!event) {
         throw new NotFoundException('Event not found');
       }
 
       const profile = await this.profileModel.findById(profileId).exec();
+
       if (!profile) {
         throw new NotFoundException('Profile not found');
       }
 
-      if (event.attendees.some((attendee) => attendee.equals(profileId))) {
-        throw new BadRequestException(
-          'Profile is already attending this event',
-        );
-      }
+      const createdParticipation =
+        await this.eventParticipationService.createParticipation({
+          event: eventId,
+          profile: profileId,
+        });
 
-      if (event.slots !== undefined && event.attendees.length >= event.slots) {
-        throw new BadRequestException('Event is fully booked');
-      }
-
-      event.attendees.push(new Types.ObjectId(profileId));
-
+      // Updating the id into profile and event
+      event.attendees.push(new Types.ObjectId(createdParticipation.data._id));
       profile.attending_events.push(new Types.ObjectId(eventId));
 
       if (event.slots !== undefined) {

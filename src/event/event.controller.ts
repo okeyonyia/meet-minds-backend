@@ -41,11 +41,11 @@ export class EventController {
   @Get('/id/:id')
   async findAllEventsById(
     @Param('id') id: string,
-    @Query('hosting') hosting?: string,
-    @Query('attending') attending?: string,
+    @Query('hosting') hosting?: boolean,
+    @Query('attending') attending?: boolean,
   ) {
-    const isHosting = hosting === 'true';
-    const isAttending = attending === 'true';
+    const isHosting = hosting === true;
+    const isAttending = attending === true;
 
     const response = await this.eventService.findAllEventsById(
       id,

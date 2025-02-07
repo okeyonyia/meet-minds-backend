@@ -1,4 +1,13 @@
-import { IsString, IsDate, IsNumber, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsDate,
+  IsNumber,
+  IsBoolean,
+  ValidateNested,
+  IsOptional,
+} from 'class-validator';
+import { LocationDto } from 'src/profile/dto/create-profile.dto';
 
 export class CreateEventDto {
   @IsString()
@@ -19,14 +28,16 @@ export class CreateEventDto {
   @IsDate()
   end_date: Date;
 
-  @IsString()
-  location: string;
+  @ValidateNested()
+  @Type(() => LocationDto)
+  @IsOptional()
+  location?: LocationDto;
 
   @IsString()
   cover_picture: string;
 
-  @IsString()
-  ticket: string;
+  @IsNumber()
+  ticket_price: number;
 
   @IsNumber()
   no_of_attendees: number;

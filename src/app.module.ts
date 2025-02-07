@@ -9,6 +9,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ProfileModule } from './profile/profile.module';
 import { EventModule } from './event/event.module';
+import { EventParticipationModule } from './event-participation/event-participation.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { EventModule } from './event/event.module';
     UserModule,
     ProfileModule,
     EventModule,
+    EventParticipationModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [
