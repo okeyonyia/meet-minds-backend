@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  EventJoinStatus,
   EventParticipation,
   EventParticipationDocument,
 } from './schema/event-participation.schema';
@@ -59,6 +60,10 @@ export class EventParticipationService {
         createEventParticipationDto,
       );
 
+      if (eventData.ticket_price === 0) {
+        newParticipation.status = EventJoinStatus.CONFIRMED;
+      }
+
       await newParticipation.save();
 
       return {
@@ -101,6 +106,89 @@ export class EventParticipationService {
       return {
         message: 'Event participation retrieved successfully',
         data: participations,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid Event ID format');
+      }
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve event participation.',
+      );
+    }
+  }
+
+  async getAllParticipants(): Promise<{
+    message: string;
+    data: EventParticipation[];
+  }> {
+    try {
+      const eventParticipantData = await this.eventParticipationModel.find();
+      if (!eventParticipantData) {
+        throw new NotFoundException('Event Participant not found.');
+      }
+
+      return {
+        message: 'Event participation retrieved successfully',
+        data: eventParticipantData,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid Event ID format');
+      }
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve event participation.',
+      );
+    }
+  }
+
+  async getParticipantById(id): Promise<{
+    message: string;
+    data: EventParticipation;
+  }> {
+    try {
+      const eventParticipantData =
+        await this.eventParticipationModel.findOne(id);
+      if (!eventParticipantData) {
+        throw new NotFoundException('Event Participant not found.');
+      }
+
+      return {
+        message: 'Event participation retrieved successfully',
+        data: eventParticipantData,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid Event ID format');
+      }
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Failed to retrieve event participation.',
+      );
+    }
+  }
+
+  async deleteParticipantById(id: string): Promise<{
+    message: string;
+    data: EventParticipation;
+  }> {
+    try {
+      const eventParticipantData =
+        await this.eventParticipationModel.findByIdAndDelete(id);
+      if (!eventParticipantData) {
+        throw new NotFoundException('Event Participant not found.');
+      }
+
+      return {
+        message: 'Event participation retrieved successfully',
+        data: eventParticipantData,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {

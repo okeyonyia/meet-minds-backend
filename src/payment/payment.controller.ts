@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Injectable, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Injectable,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { CreatePaymentDTO } from './dto/create-payment.dto';
 import { PaymentService } from './payment.service';
 
@@ -11,7 +19,7 @@ export class PaymentController {
     return this.paymentService.getAllPayments();
   }
 
-  @Post('pay')
+  @Post('initiate')
   async createPayment(@Body() createPayment: CreatePaymentDTO) {
     return this.paymentService.createPayment(createPayment);
   }

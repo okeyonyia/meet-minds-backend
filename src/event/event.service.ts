@@ -320,20 +320,7 @@ export class EventService {
   ): Promise<{ message: string; data: Event }> {
     const { eventId, profileId } = joinEventDto;
     try {
-      const event = await this.eventModel
-        .findById(eventId)
-        .populate({
-          path: 'attendees',
-          populate: {
-            path: 'profile',
-            select: 'full_name profile_pictures',
-          },
-        })
-        .populate({
-          path: 'host_id',
-          select: 'full_name profile_pictures',
-        })
-        .exec();
+      const event = await this.eventModel.findById(eventId).exec();
 
       if (!event) {
         throw new NotFoundException('Event not found');
@@ -352,17 +339,34 @@ export class EventService {
         });
 
       // Updating the id into profile and event
-      event.attendees.push(new Types.ObjectId(createdParticipation.data._id));
+      event.attendees.push(createdParticipation.data._id);
+
       profile.attending_events.push(new Types.ObjectId(eventId));
 
-      if (event.slots !== undefined) {
-        event.slots -= 1;
-      }
+      event.slots = Math.max(0, event.no_of_attendees - event.attendees.length);
 
       await event.save();
       await profile.save();
 
-      return { message: 'Successfully joined the event', data: event };
+      const updatedEvent = await this.eventModel
+        .findById(eventId)
+        .populate({
+          path: 'attendees',
+          model: 'EventParticipation',
+          populate: {
+            path: 'profile',
+            model: 'Profile',
+            select: 'full_name location profile_pictures',
+            options: { slice: { profile_pictures: 1 } },
+          },
+        })
+        .populate({
+          path: 'host_id',
+          select: 'full_name profile_pictures',
+        })
+        .exec();
+
+      return { message: 'Successfully joined the event', data: updatedEvent };
     } catch (error) {
       if (
         error instanceof NotFoundException ||

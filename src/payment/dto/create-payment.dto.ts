@@ -9,6 +9,14 @@ export class CreatePaymentDTO {
   @IsNotEmpty()
   userID: string;
 
+  @IsString()
+  @IsNotEmpty()
+  eventID: string;
+
+  @IsString()
+  @IsNotEmpty()
+  reference: string;
+
   @IsNumber()
   @IsNotEmpty()
   amount: number;
