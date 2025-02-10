@@ -58,6 +58,13 @@ export class Profile {
 
   @Prop({ type: [Types.ObjectId], ref: 'Event', required: false, default: [] })
   hosting_events: Types.ObjectId[];
+
+  // @Prop({
+  //   type: Boolean,
+  //   required: false,
+  //   default: false,
+  // })
+  // is_kyc_verified: boolean;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

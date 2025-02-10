@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -331,6 +332,12 @@ export class EventService {
       if (!profile) {
         throw new NotFoundException('Profile not found');
       }
+
+      // if (!profile.is_kyc_verified) {
+      //   throw new ForbiddenException(
+      //     'User must complete KYC verification first.',
+      //   );
+      // }
 
       const createdParticipation =
         await this.eventParticipationService.createParticipation({

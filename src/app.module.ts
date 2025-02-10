@@ -11,6 +11,7 @@ import { ProfileModule } from './profile/profile.module';
 import { EventModule } from './event/event.module';
 import { EventParticipationModule } from './event-participation/event-participation.module';
 import { PaymentModule } from './payment/payment.module';
+import { KycModule } from './kyc/kyc.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PaymentModule } from './payment/payment.module';
     EventModule,
     EventParticipationModule,
     PaymentModule,
+    KycModule,
   ],
   controllers: [AppController],
   providers: [
