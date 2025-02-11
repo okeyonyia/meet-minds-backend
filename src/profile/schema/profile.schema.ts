@@ -48,6 +48,23 @@ export class Profile {
     longitude: number;
     address?: string;
   };
+
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Event' }],
+    required: false,
+    default: [],
+  })
+  attending_events: Types.ObjectId[];
+
+  @Prop({ type: [Types.ObjectId], ref: 'Event', required: false, default: [] })
+  hosting_events: Types.ObjectId[];
+
+  // @Prop({
+  //   type: Boolean,
+  //   required: false,
+  //   default: false,
+  // })
+  // is_kyc_verified: boolean;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

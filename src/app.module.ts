@@ -8,6 +8,10 @@ import { UserModule } from './user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ProfileModule } from './profile/profile.module';
+import { EventModule } from './event/event.module';
+import { EventParticipationModule } from './event-participation/event-participation.module';
+import { PaymentModule } from './payment/payment.module';
+import { KycModule } from './kyc/kyc.module';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { ProfileModule } from './profile/profile.module';
     AuthModule,
     UserModule,
     ProfileModule,
+    EventModule,
+    EventParticipationModule,
+    PaymentModule,
+    KycModule,
   ],
   controllers: [AppController],
   providers: [
