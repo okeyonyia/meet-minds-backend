@@ -126,7 +126,7 @@ export class PaymentService {
       payment.status = 'failed';
       await payment.save();
 
-      return { message: 'Payment verification failed.' };
+      return { message: 'Payment verification failed.', statusCode: 200 };
     } catch (error) {
       throw new HttpException(
         'Payment verification failed',
