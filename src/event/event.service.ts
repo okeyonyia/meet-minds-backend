@@ -66,91 +66,114 @@ export class EventService {
 
   async findAllEvents(
     filters: { [key: string]: any } = {},
-  ): Promise<{ message: string; data: Event[] }> {
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ message: string; data: Event[]; totalCount: number }> {
     try {
       let query: any = {};
 
+      // Delete page and limit from filter it gets included automatically.
+      delete filters.page;
+      delete filters.limit;
+
       // Dynamically construct the query based on passed filters
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          switch (key) {
-            case 'text':
-              const allFields = Object.keys(this.eventModel.schema.paths); // Get all schema fields
 
-              query.$or = allFields
-                .map((field) => {
-                  const fieldType =
-                    this.eventModel.schema.paths[field].instance;
+      if (Object.keys(filters).length > 0) {
+        console.log('inside filters', filters);
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) {
+            switch (key) {
+              case 'text':
+                const allFields = Object.keys(this.eventModel.schema.paths); // Get all schema fields
 
-                  if (fieldType === 'String') {
-                    return { [field]: { $regex: value, $options: 'i' } };
-                  } else if (fieldType === 'Number') {
-                    const numValue = Number(value);
-                    return !isNaN(numValue) ? { [field]: numValue } : null;
-                  } else if (fieldType === 'Date') {
-                    const inputDate = new Date(value);
-                    if (!isNaN(inputDate.getTime())) {
-                      return {
-                        [field]: {
-                          $gte: new Date(value),
-                          $lte: new Date(value),
-                        },
-                      };
+                query.$or = allFields
+                  .map((field) => {
+                    const fieldType =
+                      this.eventModel.schema.paths[field].instance;
+
+                    if (fieldType === 'String') {
+                      return { [field]: { $regex: value, $options: 'i' } };
+                    } else if (fieldType === 'Number') {
+                      const numValue = Number(value);
+                      return !isNaN(numValue) ? { [field]: numValue } : null;
+                    } else if (fieldType === 'Date') {
+                      const inputDate = new Date(value);
+                      if (!isNaN(inputDate.getTime())) {
+                        return {
+                          [field]: {
+                            $gte: new Date(value),
+                            $lte: new Date(value),
+                          },
+                        };
+                      }
+                      return null;
                     }
-                    return null;
-                  }
 
-                  return null; // Skip other data types
-                })
-                .filter(Boolean); // Remove null values
-              break;
+                    return null; // Skip other data types
+                  })
+                  .filter(Boolean); // Remove null values
+                break;
 
-            case 'capacity':
-              query.no_of_attendees = { $gte: Number(value) };
-              break;
+              case 'capacity':
+                query.no_of_attendees = { $gte: Number(value) };
+                break;
 
-            case 'date':
-              if (value.match(/^\d{4}$/)) {
-                // If only a year is provided (e.g., "2025")
-                query.$or = [
-                  { start_date: { $regex: `^${value}-`, $options: 'i' } },
-                  { end_date: { $regex: `^${value}-`, $options: 'i' } },
-                ];
-              } else if (value.match(/^\d{4}-\d{2}$/)) {
-                // If year + month is provided (e.g., "2025-01")
-                query.$or = [
-                  { start_date: { $regex: `^${value}-`, $options: 'i' } },
-                  { end_date: { $regex: `^${value}-`, $options: 'i' } },
-                ];
-              } else {
-                // If a full date is provided (YYYY-MM-DD)
-                const searchDate = new Date(value);
-                query.$or = [
-                  { start_date: { $gte: searchDate } },
-                  { end_date: { $lte: searchDate } },
-                ];
-              }
-              break;
+              case 'date':
+                if (value.match(/^\d{4}$/)) {
+                  // If only a year is provided (e.g., "2025")
+                  query.$or = [
+                    { start_date: { $regex: `^${value}-`, $options: 'i' } },
+                    { end_date: { $regex: `^${value}-`, $options: 'i' } },
+                  ];
+                } else if (value.match(/^\d{4}-\d{2}$/)) {
+                  // If year + month is provided (e.g., "2025-01")
+                  query.$or = [
+                    { start_date: { $regex: `^${value}-`, $options: 'i' } },
+                    { end_date: { $regex: `^${value}-`, $options: 'i' } },
+                  ];
+                } else {
+                  // If a full date is provided (YYYY-MM-DD)
+                  const searchDate = new Date(value);
+                  query.$or = [
+                    { start_date: { $gte: searchDate } },
+                    { end_date: { $lte: searchDate } },
+                  ];
+                }
+                break;
 
-            default:
-              // 🔹 Auto-apply regex for partial matching on all string fields
-              query[key] =
-                typeof value === 'string'
-                  ? { $regex: value, $options: 'i' }
-                  : value;
+              default:
+                // 🔹 Auto-apply regex for partial matching on all string fields
+                query[key] =
+                  typeof value === 'string'
+                    ? { $regex: value, $options: 'i' }
+                    : value;
+            }
           }
-        }
-      });
-
-      const events = await this.eventModel
-        .find(query)
-        .populate('host_id', 'full_name profile_pictures')
-        .exec();
-      if (!events || events.length === 0) {
-        return { message: 'No events found', data: [] };
+        });
       }
 
-      return { message: 'Events retrieved successfully', data: events };
+      const totalCount = Number(await this.eventModel.countDocuments(query));
+      console.log('typeof totalcount is ' + typeof totalCount);
+      const events = await this.eventModel
+        .find(query)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate('host_id', 'full_name profile_pictures')
+        .exec();
+
+      if (!events || events.length === 0) {
+        return {
+          message: 'No events found',
+          data: [],
+          totalCount: totalCount ?? 0,
+        };
+      }
+
+      return {
+        message: 'Events retrieved successfully',
+        data: events,
+        totalCount: totalCount ?? 0,
+      };
     } catch (error) {
       throw new BadRequestException('Events not found');
     }
