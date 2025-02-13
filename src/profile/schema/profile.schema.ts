@@ -4,6 +4,12 @@ import { Gender } from '../dto/create-profile.dto';
 
 export type ProfileDocument = Profile & Document;
 
+export enum ApprovedByAdminStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
+
 @Schema({ timestamps: true })
 export class Profile {
   _id: Types.ObjectId; // Declare _id explicitly in TypeScript for type safety
@@ -59,12 +65,12 @@ export class Profile {
   @Prop({ type: [Types.ObjectId], ref: 'Event', required: false, default: [] })
   hosting_events: Types.ObjectId[];
 
-  // @Prop({
-  //   type: Boolean,
-  //   required: false,
-  //   default: false,
-  // })
-  // is_kyc_verified: boolean;
+  @Prop({
+    enum: ApprovedByAdminStatus,
+    required: true,
+    default: ApprovedByAdminStatus.PENDING,
+  })
+  is_approved: ApprovedByAdminStatus;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

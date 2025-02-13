@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -13,15 +12,12 @@ import { Event, EventDocument } from './schema/event.schema';
 import { Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
 import { JoinEventDto } from './dto/join-event.dto';
 import { EventParticipationService } from 'src/event-participation/event-participation.service';
-import { EventParticipation } from 'src/event-participation/schema/event-participation.schema';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
-    @InjectModel(EventParticipation.name)
-    private eventParticipationModel: Model<EventDocument>,
     private readonly eventParticipationService: EventParticipationService,
   ) {}
 
@@ -76,15 +72,12 @@ export class EventService {
       delete filters.page;
       delete filters.limit;
 
-      // Dynamically construct the query based on passed filters
-
       if (Object.keys(filters).length > 0) {
-        console.log('inside filters', filters);
         Object.entries(filters).forEach(([key, value]) => {
           if (value) {
             switch (key) {
               case 'text':
-                const allFields = Object.keys(this.eventModel.schema.paths); // Get all schema fields
+                const allFields = Object.keys(this.eventModel.schema.paths);
 
                 query.$or = allFields
                   .map((field) => {
@@ -153,7 +146,6 @@ export class EventService {
       }
 
       const totalCount = Number(await this.eventModel.countDocuments(query));
-      console.log('typeof totalcount is ' + typeof totalCount);
       const events = await this.eventModel
         .find(query)
         .skip((page - 1) * limit)

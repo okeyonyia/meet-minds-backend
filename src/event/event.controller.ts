@@ -8,7 +8,9 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -33,8 +35,8 @@ export class EventController {
     @Query() filters: { [key: string]: any },
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Res() res: Response, // manually handling the serialization, since nestjs wasnt sending totalCount along with the response. DON'T remove this
   ) {
-    // Ensure pagination values are numbers
     const pageNumber = parseInt(page, 10) || 1;
     const limitNumber = parseInt(limit, 10) || 10;
 
@@ -44,12 +46,12 @@ export class EventController {
       limitNumber,
     );
 
-    return {
+    return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
       message: response.message,
       data: response.data,
-      totalCount: response.totalCount ?? 0,
-    };
+      totalCount: response.totalCount,
+    });
   }
 
   @Get('/id/:id')
