@@ -25,6 +25,14 @@ export class PaymentService {
     return payments;
   }
 
+  async getPaymentById(id: string) {
+    const payment = await this.paymentModel.findOne({ _id: id }).exec();
+    if (!payment) {
+      throw new HttpException('No payment found', HttpStatus.NOT_FOUND);
+    }
+    return payment;
+  }
+
   async createPayment(createPaymentDTO: CreatePaymentDTO) {
     try {
       const existingPayment = await this.paymentModel.findOne({

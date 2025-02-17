@@ -19,6 +19,11 @@ export class PaymentController {
     return this.paymentService.getAllPayments();
   }
 
+  @Get(':id')
+  async getPaymentById(@Param('id') id: string) {
+    return this.paymentService.getPaymentById(id);
+  }
+
   @Post('initiate')
   async createPayment(@Body() createPayment: CreatePaymentDTO) {
     return this.paymentService.createPayment(createPayment);
