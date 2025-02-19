@@ -11,6 +11,8 @@ import {
 import { ProfileService } from './profile.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateProfileStatusDto } from './dto/update-profile-status.dto';
+import { Profile } from './schema/profile.schema';
 
 @Controller('profile')
 export class ProfileController {
@@ -39,6 +41,17 @@ export class ProfileController {
   @Get(':id')
   async findProfileById(@Param('id') id: string) {
     const response = await this.profileService.findProfileById(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
+  @Patch('update-status')
+  async updateProfileStatus(@Body() dto: UpdateProfileStatusDto) {
+    const response = await this.profileService.updateProfileStatus(dto);
+
     return {
       statusCode: HttpStatus.OK,
       message: response.message,
