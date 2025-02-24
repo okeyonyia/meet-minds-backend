@@ -41,8 +41,8 @@ export class CreateProfileDto {
   })
   phone_number: string;
 
-  @IsDate()
-  date_of_birth: Date;
+  @IsString()
+  date_of_birth: string;
 
   @IsString()
   bio: string;

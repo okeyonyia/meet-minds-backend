@@ -132,16 +132,10 @@ export class ProfileService {
         );
       }
 
-      const startOfDay = new Date(date_of_birth);
-      startOfDay.setUTCHours(0, 0, 0, 0); // Midnight (00:00:00)
-
-      const endOfDay = new Date(date_of_birth);
-      endOfDay.setUTCHours(23, 59, 59, 999); // End of the day (23:59:59.999)
-
       const profile = await this.profileModel
         .findOne({
           _id: new Types.ObjectId(user.profile),
-          date_of_birth: { $gte: startOfDay, $lt: endOfDay },
+          date_of_birth,
         })
         .exec();
 

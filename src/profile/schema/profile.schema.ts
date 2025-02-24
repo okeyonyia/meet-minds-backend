@@ -21,7 +21,7 @@ export class Profile {
   phone_number?: string;
 
   @Prop({ required: true })
-  date_of_birth: Date;
+  date_of_birth: string;
 
   @Prop({ required: true })
   bio: string;
