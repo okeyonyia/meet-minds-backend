@@ -148,6 +148,7 @@ export class EventService {
       const totalCount = Number(await this.eventModel.countDocuments(query));
       const events = await this.eventModel
         .find(query)
+        .sort({ start_date: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate('host_id', 'full_name profile_pictures')
