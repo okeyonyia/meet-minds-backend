@@ -4,21 +4,16 @@ import { EventService } from './event.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Event, EventSchema } from './schema/event.schema';
 import { Profile, ProfileSchema } from 'src/profile/schema/profile.schema';
-import { EventParticipationService } from 'src/event-participation/event-participation.service';
-import {
-  EventParticipation,
-  EventParticipationSchema,
-} from 'src/event-participation/schema/event-participation.schema';
+import { EventParticipationModule } from 'src/event-participation/event-participation.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Event.name, schema: EventSchema }]),
     MongooseModule.forFeature([{ name: Profile.name, schema: ProfileSchema }]),
-    MongooseModule.forFeature([
-      { name: EventParticipation.name, schema: EventParticipationSchema },
-    ]),
+    EventParticipationModule,
   ],
   controllers: [EventController],
-  providers: [EventService, EventParticipationService],
+  providers: [EventService],
+  exports: [EventService],
 })
 export class EventModule {}

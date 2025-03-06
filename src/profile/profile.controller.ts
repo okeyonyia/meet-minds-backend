@@ -77,11 +77,10 @@ export class ProfileController {
 
   @Delete(':id')
   async deleteProfile(@Param('id') id: string) {
-    const response = await this.profileService.deleteProfileById(id);
+    const response = await this.profileService.deleteAccount(id);
     return {
       statusCode: HttpStatus.OK,
       message: response.message,
-      data: response.data,
     };
   }
 }

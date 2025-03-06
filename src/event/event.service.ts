@@ -12,12 +12,20 @@ import { Event, EventDocument } from './schema/event.schema';
 import { Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
 import { JoinEventDto } from './dto/join-event.dto';
 import { EventParticipationService } from 'src/event-participation/event-participation.service';
+import {
+  EventParticipation,
+  EventParticipationDocument,
+} from 'src/event-participation/schema/event-participation.schema';
+import { profile } from 'console';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
+    @InjectModel(EventParticipation.name)
+    private eventParticipationModel: Model<EventParticipationDocument>,
+
     private readonly eventParticipationService: EventParticipationService,
   ) {}
 
@@ -455,6 +463,61 @@ export class EventService {
       }
       console.error(error);
       throw new InternalServerErrorException('Failed to leave the event');
+    }
+  }
+
+  async removeHostedEventReferences(
+    profileId: string,
+  ): Promise<{ message: string }> {
+    try {
+      console.log(profileId);
+      // Step 1: Find all events hosted by the user
+      const hostedEvents = await this.eventModel
+        .find({ host_id: profileId })
+        .exec();
+
+      if (hostedEvents.length === 0) {
+        return { message: 'User has no hosted events to clean up.' };
+      }
+
+      const eventIds = hostedEvents.map((event) => String(event._id));
+
+      // Step 2: Find all participation records for these events
+      const participations = await this.eventParticipationModel
+        .find({ event: { $in: eventIds } })
+        .exec();
+
+      if (participations.length > 0) {
+        // Extract profile IDs of all attendees
+        const profileIds = participations.map((participation) =>
+          String(participation.profile),
+        );
+
+        const objectEventIds = eventIds.map((id) => new Types.ObjectId(id));
+
+        // Step 3: Remove the event references from attendees' profiles in one bulk update
+        await this.profileModel
+          .updateMany(
+            { _id: { $in: profileIds } },
+            { $pull: { attending_events: { $in: objectEventIds } } }, // Remove event from their attending_events list
+          )
+          .exec();
+
+        // Step 4: Delete all participation records related to these events
+        await this.eventParticipationModel
+          .deleteMany({ event: { $in: objectEventIds } })
+          .exec();
+      }
+
+      // Step 5: Delete the hosted events
+      await this.eventModel.deleteMany({ _id: { $in: eventIds } }).exec();
+
+      return {
+        message:
+          'All hosted events and their references have been removed successfully.',
+      };
+    } catch (error) {
+      throw error;
     }
   }
 }
