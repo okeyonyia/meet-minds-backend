@@ -196,25 +196,25 @@ export class ProfileService {
 
       const now = new Date();
       // Check each hosted event for live/ongoing status or sold tickets
-      // for (const event of hostedEvents.data) {
-      //   if (this.isEventLive(event, now)) {
-      //     throw new HttpException(
-      //       'Cannot delete account: you have a live event ongoing.',
-      //       HttpStatus.BAD_REQUEST,
-      //     );
-      //   }
-      //   if (this.isEventUpcoming(event, now)) {
-      //     const ticketsSold = event.no_of_attendees - event.attendees.length;
+      for (const event of hostedEvents.data) {
+        if (this.isEventLive(event, now)) {
+          throw new HttpException(
+            'Cannot delete account: you have a live event ongoing.',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        if (this.isEventUpcoming(event, now)) {
+          const ticketsSold = event.no_of_attendees - event.attendees.length;
 
-      //     if (ticketsSold > 0) {
-      //       console.log(event);
-      //       throw new HttpException(
-      //         'Cannot delete account: an upcoming event has sold tickets.',
-      //         HttpStatus.BAD_REQUEST,
-      //       );
-      //     }
-      //   }
-      // }
+          if (ticketsSold > 0) {
+            console.log(event);
+            throw new HttpException(
+              'Cannot delete account: an upcoming event has sold tickets.',
+              HttpStatus.BAD_REQUEST,
+            );
+          }
+        }
+      }
 
       // Retrieve events attended by the user
       const attendedEvents = await this.eventService.findAllEventsById(
@@ -224,14 +224,14 @@ export class ProfileService {
       );
 
       // Check each attended event for live status
-      // for (const event of attendedEvents.data) {
-      //   if (this.isEventLive(event, now)) {
-      //     throw new HttpException(
-      //       'Cannot delete account: you are attending an event already, Please let it complete first. ',
-      //       HttpStatus.BAD_REQUEST,
-      //     );
-      //   }
-      // }
+      for (const event of attendedEvents.data) {
+        if (this.isEventLive(event, now)) {
+          throw new HttpException(
+            'Cannot delete account: you are attending an event already, Please let it complete first. ',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
 
       // =======================  When everything is good to delete the account. =======================
 
