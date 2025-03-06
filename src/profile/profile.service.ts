@@ -236,20 +236,16 @@ export class ProfileService {
       // =======================  When everything is good to delete the account. =======================
 
       // GOTO every attended events and remove the link of this user from their event
-      // const deletedParticipationByProfileId =
-      //   await this.eventParticipationService.deleteAllParticipationsByProfileId(
-      //     String(profile.data._id),
-      //   );
+      await this.eventParticipationService.deleteAllParticipationsByProfileId(
+        String(profile.data._id),
+      );
 
       // GOTO every hosted event and inside that goto every attendees and remove the link of that event from their attended event.
-      const removedHostEventRef =
-        await this.eventService.removeHostedEventReferences(
-          String(profile.data._id),
-        );
+      await this.eventService.removeHostedEventReferences(
+        String(profile.data._id),
+      );
 
-      console.log('removedHostEventRef => ', removedHostEventRef);
-
-      return { message: '' };
+      return { message: 'Account Deleted Successfully' };
     } catch (error) {
       if (error instanceof NotFoundException || HttpException) {
         throw error;
