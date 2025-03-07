@@ -212,11 +212,11 @@ export class EventParticipationService {
         .find({ profile: profileId })
         .exec();
 
-      if (participations.length === 0) {
-        throw new NotFoundException(
-          'No event participations found for this profile.',
-        );
-      }
+      // if (participations.length === 0) {
+      //   throw new NotFoundException(
+      //     'No event participations found for this profile.',
+      //   );
+      // }
 
       // Step 2: Extract all event IDs where the user participated
       const eventIds = participations.map(

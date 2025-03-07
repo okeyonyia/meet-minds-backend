@@ -177,10 +177,12 @@ export class ProfileService {
     message: string;
   }> {
     try {
-      const user = await this.userService.findOneUserByKey('id', userId);
+      const user = await this.userService.findOneUserByKey('uid', userId);
       if (!user) {
         throw new NotFoundException('User not found');
       }
+
+      // return { message: 'Account Deleted Successfully' };
 
       const profile = await this.findProfileById(String(user.data.profile._id));
       if (!profile) {
@@ -199,7 +201,7 @@ export class ProfileService {
       for (const event of hostedEvents.data) {
         if (this.isEventLive(event, now)) {
           throw new HttpException(
-            'Cannot delete account: you have a live event ongoing.',
+            'Cannot delete account: You have a live event ongoing.',
             HttpStatus.BAD_REQUEST,
           );
         }
@@ -209,7 +211,7 @@ export class ProfileService {
           if (ticketsSold > 0) {
             console.log(event);
             throw new HttpException(
-              'Cannot delete account: an upcoming event has sold tickets.',
+              'Cannot delete account: An upcoming event has sold tickets.',
               HttpStatus.BAD_REQUEST,
             );
           }
@@ -234,7 +236,6 @@ export class ProfileService {
       }
 
       // =======================  When everything is good to delete the account. =======================
-
       // GOTO every attended events and remove the link of this user from their event
       await this.eventParticipationService.deleteAllParticipationsByProfileId(
         String(profile.data._id),
@@ -244,6 +245,10 @@ export class ProfileService {
       await this.eventService.removeHostedEventReferences(
         String(profile.data._id),
       );
+
+      await this.profileModel.deleteOne({ _id: profile.data._id }).exec();
+
+      await this.userModel.deleteOne({ _id: user.data._id }).exec();
 
       return { message: 'Account Deleted Successfully' };
     } catch (error) {
