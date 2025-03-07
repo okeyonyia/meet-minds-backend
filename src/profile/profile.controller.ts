@@ -12,7 +12,6 @@ import { ProfileService } from './profile.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateProfileStatusDto } from './dto/update-profile-status.dto';
-import { Profile } from './schema/profile.schema';
 
 @Controller('profile')
 export class ProfileController {
@@ -76,12 +75,11 @@ export class ProfileController {
   }
 
   @Delete(':id')
-  async deleteProfile(@Param('id') id: string) {
-    const response = await this.profileService.deleteProfileById(id);
+  async deleteAccount(@Param('id') id: string) {
+    const response = await this.profileService.deleteAccount(id);
     return {
       statusCode: HttpStatus.OK,
       message: response.message,
-      data: response.data,
     };
   }
 }

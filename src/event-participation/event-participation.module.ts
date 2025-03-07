@@ -17,6 +17,6 @@ import { EventSchema } from 'src/event/schema/event.schema';
   ],
   providers: [EventParticipationService],
   controllers: [EventParticipationController],
-  exports: [EventParticipationService],
+  exports: [EventParticipationService, MongooseModule],
 })
 export class EventParticipationModule {}

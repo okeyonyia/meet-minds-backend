@@ -12,5 +12,6 @@ import { Profile, ProfileSchema } from 'src/profile/schema/profile.schema';
   ],
   controllers: [UserController],
   providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}
