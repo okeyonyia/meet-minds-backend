@@ -60,6 +60,18 @@ export class Event {
 
   @Prop({ required: true, type: Boolean })
   is_public: boolean;
+
+  @Prop({
+    type: [
+      {
+        reviewer: { type: Types.ObjectId, ref: 'Profile', required: true },
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        review: { type: String, required: false },
+      },
+    ],
+    default: [],
+  })
+  reviews: { reviewer: Types.ObjectId; rating: number; review?: string }[];
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -15,6 +16,7 @@ import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { JoinEventDto } from './dto/join-event.dto';
+import { CreateEventReviewDto } from './dto/create-event-review.dto';
 
 @Controller('event')
 export class EventController {
@@ -23,6 +25,16 @@ export class EventController {
   @Post()
   async createEvent(@Body() createEventDto: CreateEventDto) {
     const response = await this.eventService.createEvent(createEventDto);
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
+  @Patch('review')
+  async addReview(@Body() createEventReviewDto: CreateEventReviewDto) {
+    const response = await this.eventService.addReview(createEventReviewDto);
     return {
       statusCode: HttpStatus.CREATED,
       message: response.message,

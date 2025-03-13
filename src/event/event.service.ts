@@ -3,6 +3,9 @@ import {
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -17,6 +20,7 @@ import {
   EventParticipationDocument,
 } from 'src/event-participation/schema/event-participation.schema';
 import { profile } from 'console';
+import { CreateEventReviewDto } from './dto/create-event-review.dto';
 
 @Injectable()
 export class EventService {
@@ -518,6 +522,63 @@ export class EventService {
       };
     } catch (error) {
       throw error;
+    }
+  }
+
+  async addReview(
+    createEventReviewDto: CreateEventReviewDto,
+  ): Promise<{ message: string; data: Event }> {
+    const { event_id, profile_id, rating, review } = createEventReviewDto;
+    try {
+      const event = await this.eventModel.findById(event_id);
+      if (!event) {
+        throw new NotFoundException('Event not found');
+      }
+
+      // Ensure the event has finished
+      if (new Date() < event.end_date) {
+        throw new HttpException(
+          'Event has not finished yet',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Check that the user is an attendee
+      if (!event.attendees.find((att) => att.toString() === profile_id)) {
+        throw new HttpException(
+          'Only attendees can review the event',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Optionally, check if the user has already submitted a reviews
+      const alreadyReviewed = event.reviews.find(
+        (r) => r.reviewer.toString() === profile_id,
+      );
+      if (alreadyReviewed) {
+        throw new HttpException(
+          'User has already reviewed this event',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const reviewerId = new Types.ObjectId(profile_id);
+      event.reviews.push({ reviewer: reviewerId, rating, review });
+      await event.save();
+
+      return {
+        message: 'Review submitted successfully',
+        data: event,
+      };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof HttpException
+      ) {
+        throw error;
+      }
+      console.error(error);
+      throw new InternalServerErrorException('Failed to submit review');
     }
   }
 }
