@@ -472,16 +472,17 @@ export class EventService {
 
   async removeHostedEventReferences(
     profileId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; statusCode: number }> {
     try {
-      console.log(profileId);
-      // Step 1: Find all events hosted by the user
       const hostedEvents = await this.eventModel
         .find({ host_id: profileId })
         .exec();
 
       if (hostedEvents.length === 0) {
-        return { message: 'User has no hosted events to clean up.' };
+        return {
+          message: 'User has no hosted events to clean up.',
+          statusCode: HttpStatus.NOT_FOUND,
+        };
       }
 
       const eventIds = hostedEvents.map((event) => String(event._id));
@@ -498,7 +499,6 @@ export class EventService {
         );
 
         const objectEventIds = eventIds.map((id) => new Types.ObjectId(id));
-
         // Step 3: Remove the event references from attendees' profiles in one bulk update
         await this.profileModel
           .updateMany(
@@ -519,6 +519,7 @@ export class EventService {
       return {
         message:
           'All hosted events and their references have been removed successfully.',
+        statusCode: HttpStatus.OK,
       };
     } catch (error) {
       throw error;

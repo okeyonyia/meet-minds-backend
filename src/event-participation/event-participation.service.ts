@@ -212,11 +212,11 @@ export class EventParticipationService {
         .find({ profile: profileId })
         .exec();
 
-      if (participations.length === 0) {
-        throw new NotFoundException(
-          'No event participations found for this profile.',
-        );
-      }
+      // if (participations.length === 0) {
+      //   throw new NotFoundException(
+      //     'No event participations found for this profile.',
+      //   );
+      // }
 
       // Step 2: Extract all event IDs where the user participated
       const eventIds = participations.map(
@@ -224,17 +224,17 @@ export class EventParticipationService {
       );
 
       // Step 3: Bulk remove user's participation reference from all events in one query
-      // await this.eventModel
-      //   .updateMany(
-      //     { _id: { $in: eventIds } }, // Target all events where the user participated
-      //     { $pull: { attendees: { $in: participations.map((p) => p._id) } } }, // Remove participation references
-      //   )
-      //   .exec();
+      await this.eventModel
+        .updateMany(
+          { _id: { $in: eventIds } }, // Target all events where the user participated
+          { $pull: { attendees: { $in: participations.map((p) => p._id) } } }, // Remove participation references
+        )
+        .exec();
 
       // // // Step 4: Bulk delete all participation records for the user
-      // await this.eventParticipationModel
-      //   .deleteMany({ profile: profileId })
-      //   .exec();
+      await this.eventParticipationModel
+        .deleteMany({ profile: profileId })
+        .exec();
 
       return {
         message: 'All event participations deleted successfully.',
