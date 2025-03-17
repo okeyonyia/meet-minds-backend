@@ -528,10 +528,19 @@ export class EventService {
 
   async addReview(
     createEventReviewDto: CreateEventReviewDto,
-  ): Promise<{ message: string; data: Event }> {
+  ): Promise<{ message: string; statusCode: number }> {
     const { event_id, profile_id, rating, review } = createEventReviewDto;
+
     try {
-      const event = await this.eventModel.findById(event_id);
+      const event = await this.eventModel.findById(event_id).populate({
+        path: 'attendees',
+        model: 'EventParticipation',
+        populate: {
+          path: 'profile',
+          model: 'Profile',
+          select: 'full_name',
+        },
+      });
       if (!event) {
         throw new NotFoundException('Event not found');
       }
@@ -545,7 +554,16 @@ export class EventService {
       }
 
       // Check that the user is an attendee
-      if (!event.attendees.find((att) => att.toString() === profile_id)) {
+      const attendees = event.attendees as {
+        profile?: { _id: Types.ObjectId };
+      }[];
+
+      if (
+        !attendees.some(
+          (att) =>
+            att.profile && att.profile._id.toString() === profile_id.toString(),
+        )
+      ) {
         throw new HttpException(
           'Only attendees can review the event',
           HttpStatus.BAD_REQUEST,
@@ -569,17 +587,59 @@ export class EventService {
 
       return {
         message: 'Review submitted successfully',
-        data: event,
+        statusCode: HttpStatus.OK,
       };
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof HttpException
-      ) {
+      if (error instanceof NotFoundException || HttpException) {
         throw error;
       }
       console.error(error);
       throw new InternalServerErrorException('Failed to submit review');
+    }
+  }
+
+  /**
+   * Get reviews with optional filters:
+   * - `profile_id`: Fetch reviews by a specific user
+   * - `top`: Limit number of reviews (e.g., top 3)
+   */
+  async getReviews(
+    profile_id?: string,
+    top?: number,
+  ): Promise<{ message: string; statusCode: number; data: any[] }> {
+    try {
+      const events = await this.eventModel
+        .find({ host_id: profile_id })
+        .populate({
+          path: 'reviews.reviewer',
+          model: 'Profile',
+          select: 'full_name profile_pictures',
+        })
+        .select('reviews title')
+        .exec();
+
+      let reviews = events.flatMap((event) =>
+        event.reviews.map((review) => ({
+          rating: review.rating,
+          review: review.review,
+          reviewer_id: review.reviewer?._id || null,
+          reviewer_name: (review.reviewer as any).full_name,
+          reviewer_profile_pic: (review.reviewer as any).profile_pictures?.[0],
+          event_name: event.title,
+        })),
+      );
+      if (top) {
+        reviews = reviews.sort((a, b) => b.rating - a.rating).slice(0, top);
+      }
+
+      return {
+        data: reviews,
+        message: 'Reviews Retrived successfully',
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new NotFoundException('Error fetching reviews');
     }
   }
 }

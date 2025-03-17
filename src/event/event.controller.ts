@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
   HttpStatus,
   Param,
   Patch,
@@ -38,7 +39,6 @@ export class EventController {
     return {
       statusCode: HttpStatus.CREATED,
       message: response.message,
-      data: response.data,
     };
   }
 
@@ -91,6 +91,20 @@ export class EventController {
   @Get(':id')
   async findEventById(@Param('id') id: string) {
     const response = await this.eventService.findEventById(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
+  @Get('/reviews/:id')
+  @Get()
+  async getReviews(@Param('id') id: string, @Query('top') top?: number) {
+    const response = await this.eventService.getReviews(
+      id,
+      top ? Number(top) : undefined,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: response.message,
