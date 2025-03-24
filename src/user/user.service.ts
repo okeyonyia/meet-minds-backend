@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
+import { ApprovedByAdminStatus, Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
 
 @Injectable()
 export class UserService {
@@ -37,14 +37,40 @@ export class UserService {
     }
   }
 
-  async findAllUsers(): Promise<{ message: string; data: UserDocument[] }> {
+  async findAllUsers(
+    isApproved?: ApprovedByAdminStatus,
+  ): Promise<{ message: string; data: UserDocument[] }> {
     try {
-      const users = await this.userModel.find().populate('profile').exec();
+      // const populateQuery = {
+      //   path: 'profile',
+      //   match: isApproved ? { is_approved: isApproved } : {}, 
+      // };
 
-      if (users.length === 0) {
-        throw new NotFoundException('No users found.');
-      }
-      return { message: 'Users retrieved successfully.', data: users };
+      // const users = await this.userModel.find().populate(populateQuery).exec();
+
+      // const filteredUsers = isApproved
+      //   ? users.filter((user) => user.profile !== null)
+      //   : users.filter((user) => user.profile !== null); 
+
+      // if (filteredUsers.length === 0) {
+      //   throw new NotFoundException('No users found.');
+      // }
+
+      // return { message: 'Users retrieved successfully.', data: filteredUsers };
+      const query: any = {};
+
+    if (isApproved) {
+      query.profile = { $exists: true };
+      query['profile.is_approved'] = isApproved;
+    }
+
+    const users = await this.userModel.find(query).populate('profile').exec();
+
+    if (users.length === 0) {
+      throw new NotFoundException('No users found.');
+    }
+
+    return { message: 'Users retrieved successfully.', data: users };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
