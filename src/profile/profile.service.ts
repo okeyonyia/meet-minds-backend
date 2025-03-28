@@ -125,7 +125,7 @@ export class ProfileService {
     dto: UpdateProfileStatusDto,
   ): Promise<{ message: string; data: ProfileDocument }> {
     try {
-      const { email, date_of_birth, status } = dto;
+      const { email, status } = dto;
 
       const user = await this.userModel.findOne({ email }).exec();
       if (!user) {
@@ -145,7 +145,6 @@ export class ProfileService {
       const profile = await this.profileModel
         .findOne({
           _id: new Types.ObjectId(user.profile),
-          date_of_birth,
         })
         .exec();
 

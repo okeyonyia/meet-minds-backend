@@ -29,6 +29,9 @@ export class Profile {
   @Prop({ required: false })
   profession?: string;
 
+  @Prop({ required: false })
+  instagram_id?: string;
+
   @Prop({ required: true, enum: Gender })
   gender: string;
 

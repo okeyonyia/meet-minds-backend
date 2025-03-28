@@ -5,8 +5,8 @@ export class UpdateProfileStatusDto {
   @IsEmail()
   email: string;
 
-  @IsString()
-  date_of_birth: string; // Should be in ISO format (YYYY-MM-DD)
+  // @IsString()
+  // date_of_birth: string; // Should be in ISO format (YYYY-MM-DD)
 
   @IsEnum(ApprovedByAdminStatus)
   status: ApprovedByAdminStatus;

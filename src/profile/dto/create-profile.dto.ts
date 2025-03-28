@@ -48,6 +48,9 @@ export class CreateProfileDto {
   bio: string;
 
   @IsString()
+  instagram_id: string;
+
+  @IsString()
   profession: string;
 
   @IsEnum(Gender)
