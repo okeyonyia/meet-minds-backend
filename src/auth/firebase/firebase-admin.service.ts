@@ -4,12 +4,17 @@ import * as path from 'path';
 
 import * as dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config(); // Load env vars
 
-const fbServiceAccountKey = require(
-  path.resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS!),
-);
+let fbServiceAccountKey: admin.ServiceAccount;
 
+if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+  // Vercel / ENV-based setup
+  fbServiceAccountKey = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+} else {
+  // Local file-based fallback
+  fbServiceAccountKey = require(path.resolve('./fbServiceAccountKey.json'));
+}
 @Injectable()
 export class FirebaseAdminService {
   constructor() {
