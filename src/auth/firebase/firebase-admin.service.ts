@@ -8,9 +8,9 @@ dotenv.config(); // Load env vars
 
 let fbServiceAccountKey: admin.ServiceAccount;
 
-if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   // Vercel / ENV-based setup
-  fbServiceAccountKey = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  fbServiceAccountKey = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 } else {
   // Local file-based fallback
   fbServiceAccountKey = require(path.resolve('./fbServiceAccountKey.json'));
