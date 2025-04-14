@@ -30,6 +30,9 @@ export class Profile {
   profession?: string;
 
   @Prop({ required: false })
+  industry?: string;
+
+  @Prop({ required: false })
   instagram_id?: string;
 
   @Prop({ required: true, enum: Gender })
@@ -43,6 +46,12 @@ export class Profile {
 
   @Prop({ type: [String], required: true, min: 1 })
   profile_pictures: string[];
+
+  @Prop({ type: Date, required: false })
+  available_from?: Date;
+
+  @Prop({ type: Date, required: false })
+  available_to?: Date;
 
   @Prop({
     type: {
@@ -74,6 +83,13 @@ export class Profile {
     default: ApprovedByAdminStatus.PENDING,
   })
   is_approved: ApprovedByAdminStatus;
+
+  @Prop({
+    enum: ApprovedByAdminStatus,
+    required: true,
+    default: ApprovedByAdminStatus.PENDING,
+  })
+  event_creation_approval: ApprovedByAdminStatus;
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

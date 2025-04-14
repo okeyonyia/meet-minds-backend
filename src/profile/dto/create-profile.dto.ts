@@ -53,6 +53,9 @@ export class CreateProfileDto {
   @IsString()
   profession: string;
 
+  @IsString()
+  industry: string;
+
   @IsEnum(Gender)
   gender: Gender;
 

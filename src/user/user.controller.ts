@@ -7,10 +7,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
+import { ApprovedByAdminStatus } from 'src/profile/schema/profile.schema';
 
 @Controller('user')
 export class UserController {
@@ -22,8 +24,8 @@ export class UserController {
   }
 
   @Get()
-  async findAllUsers() {
-    return this.userService.findAllUsers();
+  async findAllUsers(@Query('is_approved') isApproved?: ApprovedByAdminStatus) {
+    return this.userService.findAllUsers(isApproved);
   }
 
   @Get(':key/:value')

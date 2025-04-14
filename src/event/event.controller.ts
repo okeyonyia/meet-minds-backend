@@ -18,6 +18,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { JoinEventDto } from './dto/join-event.dto';
 import { CreateEventReviewDto } from './dto/create-event-review.dto';
+import { SuggestEventDto } from './dto/suggest-event.dto';
 
 @Controller('event')
 export class EventController {
@@ -28,6 +29,17 @@ export class EventController {
     const response = await this.eventService.createEvent(createEventDto);
     return {
       statusCode: HttpStatus.CREATED,
+      message: response.message,
+      data: response.data,
+    };
+  }
+
+  @Post('suggest-event')
+  async suggestEvent(@Body() body: SuggestEventDto) {
+    const response = await this.eventService.findBestMatchingEvent(body);
+
+    return {
+      statusCode: response.statusCode,
       message: response.message,
       data: response.data,
     };
