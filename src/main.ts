@@ -7,32 +7,32 @@ import { ValidationPipe } from '@nestjs/common';
 const expressApp = express();
 let cachedServer;
 
-expressApp.use((req, res, next) => {
-  // const allowedOrigins = [
-  //   'http://localhost:3000/',
-  //   'https://pademi.events/',
-  //   'https://www.pademi.events/',
-  //   'https://www.octinnovations.com/',
-  // ];
+// expressApp.use((req, res, next) => {
+//   // const allowedOrigins = [
+//   //   'http://localhost:3000/',
+//   //   'https://pademi.events/',
+//   //   'https://www.pademi.events/',
+//   //   'https://www.octinnovations.com/',
+//   // ];
 
-  const origin = req.headers.origin;
-  // if (allowedOrigins.includes(origin)) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  // }
+//   const origin = req.headers.origin;
+//   // if (allowedOrigins.includes(origin)) {
+//   res.setHeader('Access-Control-Allow-Origin', '*');
+//   // }
 
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  );
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+//   res.setHeader(
+//     'Access-Control-Allow-Methods',
+//     'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+//   );
+//   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+//   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+//   if (req.method === 'OPTIONS') {
+//     return res.status(204).end();
+//   }
 
-  next();
-});
+//   next();
+// });
 
 async function bootstrapServer() {
   if (!cachedServer) {
