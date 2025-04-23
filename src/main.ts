@@ -26,7 +26,13 @@ async function bootstrapServer() {
     );
 
     app.enableCors({
-      origin: '*',
+      // origin: '*',
+      origin: [
+        'http://localhost:3000',
+        'https://pademi.events',
+        'https://www.pademi.events',
+        'https://www.octinnovations.com',
+      ],
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
     });
