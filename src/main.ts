@@ -7,33 +7,6 @@ import { ValidationPipe } from '@nestjs/common';
 const expressApp = express();
 let cachedServer;
 
-// expressApp.use((req, res, next) => {
-//   // const allowedOrigins = [
-//   //   'http://localhost:3000/',
-//   //   'https://pademi.events/',
-//   //   'https://www.pademi.events/',
-//   //   'https://www.octinnovations.com/',
-//   // ];
-
-//   const origin = req.headers.origin;
-//   // if (allowedOrigins.includes(origin)) {
-//   res.setHeader('Access-Control-Allow-Origin', '*');
-//   // }
-
-//   res.setHeader(
-//     'Access-Control-Allow-Methods',
-//     'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-//   );
-//   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-//   res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-//   if (req.method === 'OPTIONS') {
-//     return res.status(204).end();
-//   }
-
-//   next();
-// });
-
 async function bootstrapServer() {
   if (!cachedServer) {
     const app = await NestFactory.create(
@@ -54,12 +27,6 @@ async function bootstrapServer() {
 
     app.enableCors({
       origin: '*',
-      // origin: [
-      //   'http://localhost:3000/',
-      //   'https://pademi.events/',
-      //   'https://www.pademi.events/',
-      //   'https://www.octinnovations.com/',
-      // ],
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
     });
@@ -90,7 +57,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = process.env.PORT || 8001;
+  const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
 }
 
