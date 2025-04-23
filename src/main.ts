@@ -128,7 +128,9 @@ async function bootstrap() {
 
       const allowedOrigins = [
         'http://localhost:3000',
-        'https://teeppe.com',
+        'https://pademi.events',
+        'https://www.pademi.events/',
+        'https://https://www.octinnovations.com',
         'http://localhost:8000',
       ];
       if (allowedOrigins.includes(origin)) {
