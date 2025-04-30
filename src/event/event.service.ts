@@ -658,17 +658,12 @@ export class EventService {
   ): Promise<{ message: string; statusCode: number; data: Event | null }> {
     try {
       const { profile_id, available_from, available_to } = data;
-
-      console.log('Coming inside service');
+      const now = new Date();
+      const MAX_DISTANCES = [32187, 48280, 80467]; // 20, 30, 50 miles in meters
 
       const profile = await this.profileModel.findById(profile_id);
       if (!profile) throw new Error('Profile not found');
-
-      if (
-        !profile.location ||
-        !profile.location.latitude ||
-        !profile.location.longitude
-      ) {
+      if (!profile.location?.latitude || !profile.location?.longitude) {
         throw new Error('Profile location not set');
       }
 
@@ -676,10 +671,8 @@ export class EventService {
       profile.available_to = available_to;
       await profile.save();
 
-      const MAX_DISTANCE_METERS = 32187; // 20 miles = 32,187 meters
-
-      const now = new Date();
-      let events = await this.eventModel.find({
+      // Initial fetch - broader, not filtered by distance
+      const allUpcomingEvents = await this.eventModel.find({
         start_date: { $lte: available_to, $gte: now },
         end_date: { $gte: available_from },
         status: { $ne: 'pending' },
@@ -687,18 +680,8 @@ export class EventService {
         is_full: { $ne: true },
       });
 
-      if (!events.length) {
-        console.warn('⚠️ No relevant events found. Fallback triggered.');
-        events = await this.eventModel.find({
-          status: { $ne: 'pending' },
-          _id: { $nin: profile.attending_events },
-          is_full: { $ne: true },
-          start_date: { $gte: now },
-        });
-      }
-
-      if (!events.length) {
-        console.error('❌ No events available');
+      if (!allUpcomingEvents.length) {
+        console.warn('❗ No upcoming events found at all');
         return {
           message: 'No events available',
           statusCode: HttpStatus.NOT_FOUND,
@@ -706,112 +689,137 @@ export class EventService {
         };
       }
 
-      events = events.filter((event) => {
-        const profileLoc = profile.location;
-        const eventLoc = event.location;
+      // Try events within increasing distance thresholds
+      for (const maxDistance of MAX_DISTANCES) {
+        const nearbyEvents = allUpcomingEvents.filter((event) => {
+          if (!event.location?.latitude || !event.location?.longitude)
+            return false;
 
-        if (!profileLoc || !eventLoc) return false; // Cannot compare location
-
-        const distanceInMeters = geolib.getDistance(
-          { latitude: profileLoc.latitude, longitude: profileLoc.longitude },
-          { latitude: eventLoc.latitude, longitude: eventLoc.longitude },
-        );
-
-        return distanceInMeters <= MAX_DISTANCE_METERS; // 20 miles
-      });
-
-      const scoredEvents = events.map((event) => {
-        let score = 0;
-        const combinedText =
-          `${event.title} ${event.description}`.toLowerCase();
-
-        // Interest match (fuzzy)
-        const interestScore = profile.interests.reduce((acc, interest) => {
-          return (
-            acc +
-            stringSimilarity.compareTwoStrings(
-              combinedText,
-              interest.toLowerCase(),
-            ) *
-              this.SCORE_WEIGHTS.interest
-          );
-        }, 0);
-        score += interestScore;
-
-        // Goal match (fuzzy)
-        const goalScore = profile.user_goal.reduce((acc, goal) => {
-          return (
-            acc +
-            stringSimilarity.compareTwoStrings(
-              combinedText,
-              goal.toLowerCase(),
-            ) *
-              this.SCORE_WEIGHTS.goal
-          );
-        }, 0);
-        score += goalScore;
-
-        // Soft fields match
-        const softFields = [
-          profile.bio,
-          profile.profession,
-          profile.industry,
-          profile.gender,
-        ].filter(Boolean);
-        const softScore = softFields.reduce((acc, field) => {
-          return (
-            acc +
-            stringSimilarity.compareTwoStrings(
-              combinedText,
-              field.toLowerCase(),
-            ) *
-              this.SCORE_WEIGHTS.soft
-          );
-        }, 0);
-        score += softScore;
-
-        // Location match using distance
-        const profileLoc = profile.location;
-        const eventLoc = event.location;
-
-        if (profileLoc && eventLoc) {
           const distance = geolib.getDistance(
-            { latitude: profileLoc.latitude, longitude: profileLoc.longitude },
-            { latitude: eventLoc.latitude, longitude: eventLoc.longitude },
+            {
+              latitude: profile.location.latitude,
+              longitude: profile.location.longitude,
+            },
+            {
+              latitude: event.location.latitude,
+              longitude: event.location.longitude,
+            },
           );
-          if (distance < 5000) score += this.SCORE_WEIGHTS.location; // within 5km
+
+          return distance <= maxDistance;
+        });
+
+        if (!nearbyEvents.length) {
+          console.log(
+            `🔄 No events found within ${maxDistance} meters. Expanding range...`,
+          );
+          continue;
         }
 
-        // Time overlap
-        score += this.calculateTimeOverlapScore(
-          event,
-          available_from,
-          available_to,
+        // Score and sort matched events
+        const scoredEvents = nearbyEvents.map((event, index) => {
+          let score = 0;
+          const combinedText =
+            `${event.title} ${event.description}`.toLowerCase();
+
+          // Interest match
+          const interestScore = profile.interests.reduce((acc, interest) => {
+            return (
+              acc +
+              stringSimilarity.compareTwoStrings(
+                combinedText,
+                interest.toLowerCase(),
+              ) *
+                this.SCORE_WEIGHTS.interest
+            );
+          }, 0);
+          score += interestScore;
+
+          // Goal match
+          const goalScore = profile.user_goal.reduce((acc, goal) => {
+            return (
+              acc +
+              stringSimilarity.compareTwoStrings(
+                combinedText,
+                goal.toLowerCase(),
+              ) *
+                this.SCORE_WEIGHTS.goal
+            );
+          }, 0);
+          score += goalScore;
+
+          // Soft fields match
+          const softFields = [
+            profile.bio,
+            profile.profession,
+            profile.industry,
+            profile.gender,
+          ].filter(Boolean);
+          const softScore = softFields.reduce((acc, field) => {
+            return (
+              acc +
+              stringSimilarity.compareTwoStrings(
+                combinedText,
+                field.toLowerCase(),
+              ) *
+                this.SCORE_WEIGHTS.soft
+            );
+          }, 0);
+          score += softScore;
+
+          // Bonus for close distance
+          const distance = geolib.getDistance(
+            {
+              latitude: profile.location.latitude,
+              longitude: profile.location.longitude,
+            },
+            {
+              latitude: event.location.latitude,
+              longitude: event.location.longitude,
+            },
+          );
+          if (distance < 5000) score += this.SCORE_WEIGHTS.location;
+
+          // Time overlap score
+          score += this.calculateTimeOverlapScore(
+            event,
+            available_from,
+            available_to,
+          );
+
+          return {
+            event,
+            score,
+            tieBreaker: event.start_date.getTime() + index,
+          };
+        });
+
+        const sorted = scoredEvents.sort((a, b) =>
+          b.score !== a.score ? b.score - a.score : a.tieBreaker - b.tieBreaker,
         );
 
-        return { event, score };
-      });
+        const topEvent = sorted[0];
+        if (topEvent) {
+          console.log(
+            `[🎯 Match Found] Score: ${topEvent.score}, Event ID: ${topEvent.event._id}`,
+          );
+          return {
+            message: 'Best matching event found',
+            statusCode: HttpStatus.OK,
+            data: topEvent.event,
+          };
+        }
+      }
 
-      const sorted = scoredEvents
-        .sort((a, b) => b.score - a.score)
-        .map((e, index) => ({
-          ...e,
-          tieBreaker: e.event.start_date.getTime() + index,
-        }));
-
-      const topEvent = sorted[0];
-
-      console.log(
-        `[Match Result] Best Score: ${topEvent?.score}, Event ID: ${topEvent?.event?._id}`,
-      );
-
+      // Fallback: return first available non-pending, non-attending event
+      const fallback = allUpcomingEvents[0];
       return {
-        message: 'Best matching event found',
+        message: 'Fallback event returned (no match within distance)',
         statusCode: HttpStatus.OK,
-        data: topEvent?.event || null,
+        data: fallback,
       };
     } catch (error) {
-      console.error('🔥 Error in finding best matching event:', error);
+      console.error('🔥 Error finding best matching event:', error);
       return {
         message: error.message || 'Internal Server Error',
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
