@@ -673,8 +673,9 @@ export class EventService {
 
       // Initial fetch - broader, not filtered by distance
       const allUpcomingEvents = await this.eventModel.find({
-        start_date: { $lte: available_to, $gte: now },
-        end_date: { $gte: available_from },
+        // start_date: { $lte: available_to, $gte: now },
+        // end_date: { $gte: available_from },
+        start_date: { $gte: available_from, $lte: available_to },
         status: { $ne: 'pending' },
         _id: { $nin: profile.attending_events },
         is_full: { $ne: true },
