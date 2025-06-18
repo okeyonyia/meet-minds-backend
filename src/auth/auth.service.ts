@@ -10,4 +10,8 @@ export class AuthService {
   async verify(token: string): Promise<DecodedIdToken> {
     return await this.firebaseAdminService.verifyIdToken(token);
   }
+
+  async deleteUserFromFirebase(uid: string) {
+    return await this.firebaseAdminService.deleteUserFromFirebase(uid);
+  }
 }

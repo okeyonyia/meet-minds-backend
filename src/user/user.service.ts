@@ -14,6 +14,7 @@ import {
   Profile,
   ProfileDocument,
 } from 'src/profile/schema/profile.schema';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class UserService {
@@ -21,6 +22,8 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Profile.name)
     private profileModel: Model<ProfileDocument>,
+
+    private readonly authService: AuthService,
   ) {}
 
   async createUser(
@@ -32,6 +35,18 @@ export class UserService {
 
       return { message: 'User created successfully.', data: savedUser };
     } catch (error) {
+      if (createUserDto.uid) {
+        try {
+          await this.authService.deleteUserFromFirebase(createUserDto.uid);
+        } catch (firebaseError) {
+          if (firebaseError.code === 'auth/user-not-found') {
+            return;
+          } else {
+            throw new InternalServerErrorException('Firebase deletion failed.');
+          }
+        }
+      }
+
       if (error.code === 11000) {
         throw new BadRequestException(
           'User with this email or UID already exists.',

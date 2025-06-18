@@ -50,4 +50,16 @@ export class FirebaseAdminService {
       throw new BadRequestException('Invalid Firebase UID.');
     }
   }
+
+  async deleteUserFromFirebase(uid: string) {
+    try {
+      const userRecord = await admin.auth().deleteUser(uid);
+      return userRecord;
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        return;
+      }
+      throw new Error(error.message);
+    }
+  }
 }

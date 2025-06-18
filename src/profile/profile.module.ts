@@ -7,6 +7,7 @@ import { User, UserSchema } from 'src/user/schema/user.schema';
 import { UserService } from 'src/user/user.service';
 import { EventModule } from 'src/event/event.module';
 import { EventParticipationModule } from 'src/event-participation/event-participation.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { EventParticipationModule } from 'src/event-participation/event-particip
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     EventModule,
     EventParticipationModule,
+    AuthModule,
   ],
   providers: [ProfileService, UserService],
   controllers: [ProfileController],
