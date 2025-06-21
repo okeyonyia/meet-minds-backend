@@ -45,31 +45,39 @@ export class CreateProfileDto {
   date_of_birth: string;
 
   @IsString()
+  @IsOptional()
   bio: string;
 
   @IsString()
+  @IsOptional()
   instagram_id: string;
 
   @IsString()
+  @IsOptional()
   profession: string;
 
   @IsString()
+  @IsOptional()
   industry: string;
 
   @IsEnum(Gender)
+  @IsOptional()
   gender: Gender;
 
   @IsArray()
+  @IsOptional()
   user_goal: string[];
 
   @IsArray()
   @ArrayMinSize(1)
   @IsString({ each: true })
+  @IsOptional()
   interests: string[];
 
   @IsArray()
   @ArrayMinSize(1)
   @IsString({ each: true })
+  @IsOptional()
   profile_pictures?: string[];
 
   @ValidateNested()

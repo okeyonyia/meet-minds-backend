@@ -20,10 +20,10 @@ export class Profile {
   @Prop({ required: false })
   phone_number?: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   date_of_birth: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   bio: string;
 
   @Prop({ required: false })
@@ -35,16 +35,16 @@ export class Profile {
   @Prop({ required: false })
   instagram_id?: string;
 
-  @Prop({ required: true, enum: Gender })
+  @Prop({ required: false, enum: Gender })
   gender: string;
 
-  @Prop({ type: [String], required: true, min: 1 })
+  @Prop({ type: [String], required: false, min: 1 })
   user_goal: string[];
 
-  @Prop({ type: [String], required: true, min: 1 })
+  @Prop({ type: [String], required: false, min: 1 })
   interests: string[];
 
-  @Prop({ type: [String], required: true, min: 1 })
+  @Prop({ type: [String], required: false, min: 1 })
   profile_pictures: string[];
 
   @Prop({ type: Date, required: false })
@@ -79,14 +79,14 @@ export class Profile {
 
   @Prop({
     enum: ApprovedByAdminStatus,
-    required: true,
+    required: false,
     default: ApprovedByAdminStatus.PENDING,
   })
   is_approved: ApprovedByAdminStatus;
 
   @Prop({
     enum: ApprovedByAdminStatus,
-    required: true,
+    required: false,
     default: ApprovedByAdminStatus.PENDING,
   })
   event_creation_approval: ApprovedByAdminStatus;
