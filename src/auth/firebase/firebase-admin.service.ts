@@ -8,13 +8,20 @@ dotenv.config(); // Load env vars
 
 let fbServiceAccountKey: admin.ServiceAccount;
 
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-  // Vercel / ENV-based setup
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.GOOGLE_APPLICATION_CREDENTIALS
+) {
   fbServiceAccountKey = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_TESTING) {
+  fbServiceAccountKey = JSON.parse(
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_TESTING,
+  );
 } else {
   // Local file-based fallback
   fbServiceAccountKey = require(path.resolve('./fbServiceAccountKey.json'));
 }
+
 @Injectable()
 export class FirebaseAdminService {
   constructor() {
