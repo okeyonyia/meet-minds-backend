@@ -9,16 +9,19 @@ dotenv.config(); // Load env vars
 let fbServiceAccountKey: admin.ServiceAccount;
 
 if (
-  process.env.NODE_ENV === 'production' &&
+  process.env.VERCEL_ENV === 'production' &&
   process.env.GOOGLE_APPLICATION_CREDENTIALS
 ) {
   fbServiceAccountKey = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_TESTING) {
+} else if (
+  process.env.VERCEL_ENV === 'preview' &&
+  process.env.GOOGLE_APPLICATION_CREDENTIALS_TESTING
+) {
   fbServiceAccountKey = JSON.parse(
     process.env.GOOGLE_APPLICATION_CREDENTIALS_TESTING,
   );
 } else {
-  // Local file-based fallback
+  // Local dev fallback
   fbServiceAccountKey = require(path.resolve('./fbServiceAccountKey.json'));
 }
 
