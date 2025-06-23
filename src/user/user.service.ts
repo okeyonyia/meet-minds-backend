@@ -89,6 +89,7 @@ export class UserService {
         throw new NotFoundException('No users found.');
       }
 
+      console.log('🔥 VERCEL_ENV:', process.env.VERCEL_ENV);
       return { message: 'Users retrieved successfully.', data: users };
     } catch (error) {
       if (error instanceof NotFoundException) {
