@@ -80,7 +80,7 @@ export class Profile {
   @Prop({
     enum: ApprovedByAdminStatus,
     required: false,
-    default: ApprovedByAdminStatus.PENDING,
+    default: ApprovedByAdminStatus.APPROVED,
   })
   is_approved: ApprovedByAdminStatus;
 
