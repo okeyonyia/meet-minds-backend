@@ -44,7 +44,7 @@ export class Profile {
   @Prop({ type: [String], required: false, min: 1 })
   interests: string[];
 
-  @Prop({ type: [String], required: false, min: 1 })
+  @Prop({ type: [String], required: false })
   profile_pictures: string[];
 
   @Prop({ type: Date, required: false })
