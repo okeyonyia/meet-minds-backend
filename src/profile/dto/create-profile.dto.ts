@@ -3,7 +3,6 @@ import {
   IsString,
   IsArray,
   IsEnum,
-  IsDate,
   ArrayMinSize,
   IsPhoneNumber,
   ValidateNested,
@@ -75,7 +74,6 @@ export class CreateProfileDto {
   interests: string[];
 
   @IsArray()
-  @ArrayMinSize(1)
   @IsString({ each: true })
   @IsOptional()
   profile_pictures?: string[];
