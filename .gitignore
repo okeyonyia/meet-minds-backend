@@ -59,6 +59,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /node_modules
 /build
 /fbServiceAccountKey.json
+/fbServiceAccountKey2.json
 
 # Logs
 logs

@@ -7,7 +7,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Profile, ProfileDocument } from './schema/profile.schema';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -76,17 +76,33 @@ export class ProfileService {
     }
   }
 
-  async findProfileById(
-    id: string,
-  ): Promise<{ message: string; data: ProfileDocument }> {
+  async findProfileById(id: string) {
     try {
-      const profile = await this.profileModel.findById(id).exec();
-
+      // Find the profile first
+      const profile = await this.profileModel.findById(id).lean().exec();
+      console.log(profile);
       if (!profile) {
         throw new NotFoundException(`Profile with ID ${id} not found.`);
       }
 
-      return { message: 'Profile retrieved successfully.', data: profile };
+      // Find user having this profile ID
+      const user = await this.userModel
+        .findOne({ profile: new mongoose.Types.ObjectId(id) })
+        .lean()
+        .exec();
+      console.log('USer => ', user);
+      if (!user) {
+        throw new NotFoundException(`User for profile ID ${id} not found.`);
+      }
+
+      // Merge profile data + uid
+      return {
+        message: 'Profile retrieved successfully.',
+        data: {
+          ...profile,
+          uid: user.uid,
+        },
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;

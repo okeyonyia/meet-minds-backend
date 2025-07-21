@@ -656,7 +656,7 @@ export class EventService {
 
   async findBestMatchingEvent(
     data: SuggestEventDto,
-  ): Promise<{ message: string; statusCode: number; data: Event | null }> {
+  ): Promise<{ message: string; statusCode: number; data: Event[] | null }> {
     try {
       const { profile_id, available_from, available_to } = data;
       const now = new Date();
@@ -680,6 +680,7 @@ export class EventService {
         status: { $ne: 'pending' },
         _id: { $nin: profile.attending_events },
         is_full: { $ne: true },
+        is_public: true,
       });
 
       if (!allUpcomingEvents.length) {
@@ -800,6 +801,8 @@ export class EventService {
           b.score !== a.score ? b.score - a.score : a.tieBreaker - b.tieBreaker,
         );
 
+        const sortedEventsOnly = sorted.map((item) => item.event);
+
         const topEvent = sorted[0];
         if (topEvent) {
           console.log(
@@ -808,7 +811,8 @@ export class EventService {
           return {
             message: 'Best matching event found',
             statusCode: HttpStatus.OK,
-            data: topEvent.event,
+            // data: topEvent.event,
+            data: sortedEventsOnly,
           };
         }
       }
@@ -818,7 +822,8 @@ export class EventService {
       return {
         message: 'Fallback event returned (no match within distance)',
         statusCode: HttpStatus.OK,
-        data: fallback,
+        // data: fallback,
+        data: allUpcomingEvents || [],
       };
     } catch (error) {
       console.error('🔥 Error finding best matching event:', error);

@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsNumber,
 } from 'class-validator';
+import { ProfilePrivacyDto } from './profile-privacy.dto';
 
 export enum Gender {
   MALE = 'male',
@@ -84,4 +85,9 @@ export class CreateProfileDto {
   @Type(() => LocationDto)
   @IsOptional()
   location?: LocationDto;
+
+  @ValidateNested()
+  @Type(() => ProfilePrivacyDto)
+  @IsOptional()
+  profile_privacy?: ProfilePrivacyDto;
 }
