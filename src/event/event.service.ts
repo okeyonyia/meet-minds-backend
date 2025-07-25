@@ -223,7 +223,7 @@ export class EventService {
           select: 'full_name location profile_pictures',
           options: { slice: { profile_pictures: 1 } },
         })
-        .sort({ createdAt: -1 })
+        .sort({ start_date: -1 })
         .exec();
 
       if (!events || events.length === 0) {
