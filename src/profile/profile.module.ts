@@ -19,5 +19,6 @@ import { AuthModule } from 'src/auth/auth.module';
   ],
   providers: [ProfileService, UserService],
   controllers: [ProfileController],
+  exports: [MongooseModule],
 })
 export class ProfileModule {}

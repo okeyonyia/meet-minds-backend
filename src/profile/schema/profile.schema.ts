@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Gender } from '../dto/create-profile.dto';
+import { ProfilePrivacyDto } from '../dto/profile-privacy.dto';
 
 export type ProfileDocument = Profile & Document;
 
@@ -78,9 +79,20 @@ export class Profile {
   hosting_events: Types.ObjectId[];
 
   @Prop({
+    type: ProfilePrivacyDto,
+    required: false,
+    default: {
+      show_age: false,
+      get_invited: true,
+      show_attended_events: true,
+    },
+  })
+  profile_privacy: ProfilePrivacyDto;
+
+  @Prop({
     enum: ApprovedByAdminStatus,
     required: false,
-    default: ApprovedByAdminStatus.PENDING,
+    default: ApprovedByAdminStatus.APPROVED,
   })
   is_approved: ApprovedByAdminStatus;
 
