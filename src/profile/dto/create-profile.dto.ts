@@ -69,7 +69,7 @@ export class CreateProfileDto {
   user_goal: string[];
 
   @IsArray()
-  @ArrayMinSize(1)
+  // @ArrayMinSize(1)
   @IsString({ each: true })
   @IsOptional()
   interests: string[];
