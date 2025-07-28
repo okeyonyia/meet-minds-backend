@@ -27,7 +27,7 @@ export class Profile {
   @Prop({ required: false })
   bio: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: 'Profession' })
   profession?: string;
 
   @Prop({ required: false })

@@ -118,6 +118,10 @@ export class ProfileService {
     updateProfileDto: UpdateProfileDto,
   ): Promise<{ message: string; data: ProfileDocument }> {
     try {
+      if (!updateProfileDto.profession) {
+        updateProfileDto.profession = 'Profession';
+      }
+
       const updatedProfile = await this.profileModel
         .findByIdAndUpdate(id, updateProfileDto, { new: true })
         .exec();
