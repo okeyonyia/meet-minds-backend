@@ -90,7 +90,6 @@ export class ProfileService {
         .findOne({ profile: new mongoose.Types.ObjectId(id) })
         .lean()
         .exec();
-      console.log('USer => ', user);
       if (!user) {
         throw new NotFoundException(`User for profile ID ${id} not found.`);
       }
@@ -277,6 +276,29 @@ export class ProfileService {
       console.log(error);
       throw new InternalServerErrorException('Failed to update profile.');
     }
+  }
+
+  async haveSharedEvents(
+    profileId1: string,
+    profileId2: string,
+  ): Promise<boolean> {
+    if (profileId1 === profileId2) return true; // allow chatting with self
+
+    const [profile1, profile2] = await Promise.all([
+      this.profileModel.findById(profileId1).select('attending_events'),
+      this.profileModel.findById(profileId2).select('attending_events'),
+    ]);
+
+    if (!profile1 || !profile2) {
+      throw new NotFoundException('One or both profiles not found');
+    }
+
+    const attended1 = new Set(
+      profile1.attending_events.map((id) => id.toString()),
+    );
+    const attended2 = profile2.attending_events.map((id) => id.toString());
+
+    return attended2.some((eventId) => attended1.has(eventId));
   }
 
   /**
