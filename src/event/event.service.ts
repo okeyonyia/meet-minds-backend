@@ -79,7 +79,7 @@ export class EventService {
     limit: number = 10,
   ): Promise<{ message: string; data: Event[]; totalCount: number }> {
     try {
-      let query: any = {};
+      const query: any = {};
 
       // Delete page and limit from filter it gets included automatically.
       delete filters.page;
@@ -182,7 +182,7 @@ export class EventService {
         data: events,
         totalCount: totalCount ?? 0,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException('Events not found');
     }
   }
