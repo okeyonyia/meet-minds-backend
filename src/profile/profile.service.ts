@@ -282,7 +282,7 @@ export class ProfileService {
     profileId1: string,
     profileId2: string,
   ): Promise<boolean> {
-    if (profileId1 === profileId2) return true; // allow chatting with self
+    if (profileId1 === profileId2) return true;
 
     const [profile1, profile2] = await Promise.all([
       this.profileModel.findById(profileId1).select('attending_events'),

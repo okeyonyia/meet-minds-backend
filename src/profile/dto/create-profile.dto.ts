@@ -3,7 +3,6 @@ import {
   IsString,
   IsArray,
   IsEnum,
-  ArrayMinSize,
   IsPhoneNumber,
   ValidateNested,
   IsOptional,
