@@ -293,12 +293,12 @@ export class ProfileService {
       throw new NotFoundException('One or both profiles not found');
     }
 
-    const attended1 = new Set(
-      profile1.attending_events.map((id) => id.toString()),
-    );
+    const attended1 = profile1.attending_events.map((id) => id.toString());
     const attended2 = profile2.attending_events.map((id) => id.toString());
 
-    return attended2.some((eventId) => attended1.has(eventId));
+    const shared = attended1.filter((eventId) => attended2.includes(eventId));
+
+    return shared.length > 0;
   }
 
   /**
