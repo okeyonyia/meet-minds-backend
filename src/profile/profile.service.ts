@@ -13,16 +13,23 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User, UserDocument } from 'src/user/schema/user.schema';
 import { UpdateProfileStatusDto } from './dto/update-profile-status.dto';
-import { Event } from 'src/event/schema/event.schema';
+import { Event, EventDocument } from 'src/event/schema/event.schema';
 import { UserService } from 'src/user/user.service';
 import { EventService } from 'src/event/event.service';
 import { EventParticipationService } from 'src/event-participation/event-participation.service';
+import {
+  EventParticipation,
+  EventParticipationDocument,
+} from '../event-participation/schema/event-participation.schema';
 
 @Injectable()
 export class ProfileService {
   constructor(
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    @InjectModel(EventParticipation.name)
+    private readonly eventParticipationModel: Model<EventParticipationDocument>,
 
     private readonly userService: UserService,
     private readonly eventService: EventService,
@@ -80,7 +87,6 @@ export class ProfileService {
     try {
       // Find the profile first
       const profile = await this.profileModel.findById(id).lean().exec();
-      console.log(profile);
       if (!profile) {
         throw new NotFoundException(`Profile with ID ${id} not found.`);
       }
@@ -227,7 +233,6 @@ export class ProfileService {
           const ticketsSold = event.no_of_attendees - event.attendees.length;
 
           if (ticketsSold > 0) {
-            console.log(event);
             throw new HttpException(
               'Cannot delete account: An upcoming event has sold tickets.',
               HttpStatus.BAD_REQUEST,
@@ -277,6 +282,10 @@ export class ProfileService {
       throw new InternalServerErrorException('Failed to update profile.');
     }
   }
+  /**
+   * Checks if two profiles have shared events.
+   * Returns true if they have at least one event in common.
+   */
 
   async haveSharedEvents(
     profileId1: string,
@@ -284,21 +293,42 @@ export class ProfileService {
   ): Promise<boolean> {
     if (profileId1 === profileId2) return true;
 
-    const [profile1, profile2] = await Promise.all([
-      this.profileModel.findById(profileId1).select('attending_events'),
-      this.profileModel.findById(profileId2).select('attending_events'),
+    // Get all participations for both profiles
+    const [p1Events, p2Events] = await Promise.all([
+      this.eventParticipationModel
+        .find({ profile: profileId1 })
+        .select('event')
+        .lean(),
+      this.eventParticipationModel
+        .find({ profile: profileId2 })
+        .select('event')
+        .lean(),
     ]);
 
-    if (!profile1 || !profile2) {
-      throw new NotFoundException('One or both profiles not found');
-    }
+    const p1EventIds = p1Events.map((p) => p.event.toString());
+    const p2EventIds = p2Events.map((p) => p.event.toString());
 
-    const attended1 = profile1.attending_events.map((id) => id.toString());
-    const attended2 = profile2.attending_events.map((id) => id.toString());
+    // Shared event both attended
+    const shared = p1EventIds.filter((id) => p2EventIds.includes(id));
+    if (shared.length > 0) return true;
 
-    const shared = attended1.filter((eventId) => attended2.includes(eventId));
+    // Hosted event attended by the other
+    const [hostedBy1, hostedBy2] = await Promise.all([
+      this.eventModel.find({ host_id: profileId1 }).select('_id').lean(),
+      this.eventModel.find({ host_id: profileId2 }).select('_id').lean(),
+    ]);
 
-    return shared.length > 0;
+    const hostedBy1Ids = hostedBy1.map((e) => e._id.toString());
+    const hostedBy2Ids = hostedBy2.map((e) => e._id.toString());
+
+    const host1_sharedWith2 = p2EventIds.some((id) =>
+      hostedBy1Ids.includes(id),
+    );
+    const host2_sharedWith1 = p1EventIds.some((id) =>
+      hostedBy2Ids.includes(id),
+    );
+
+    return host1_sharedWith2 || host2_sharedWith1;
   }
 
   /**
