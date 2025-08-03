@@ -104,6 +104,8 @@ export class PaymentService {
         },
       );
 
+      console.log('Response from paystack => ', response);
+
       if (!response.data.status) {
         throw new HttpException(response.data.message, HttpStatus.BAD_REQUEST);
       }
@@ -122,7 +124,7 @@ export class PaymentService {
 
         // 🔹 Step 4: Update event participation to `CONFIRMED`
         await this.eventParticipationModel.updateOne(
-          { profile: payment.userID, status: 'pending' },
+          { profile: payment.userID, status: 'pending', payment: payment._id },
           { $set: { status: 'confirmed', payment: payment._id } },
         );
 
