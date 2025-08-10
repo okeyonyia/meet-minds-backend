@@ -48,6 +48,14 @@ async function bootstrapServer() {
         tagsSorter: 'alpha',
         operationsSorter: 'alpha',
       },
+
+      customSiteTitle: 'Pademi Documentation',
+      customfavIcon: '/favicon.ico',
+      customJs: [
+        'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js',
+        'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js',
+      ],
+      customCssUrl: ['https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css'],
     });
 
     await app.init();
