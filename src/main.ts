@@ -43,20 +43,56 @@ async function bootstrapServer() {
 
     const document = SwaggerModule.createDocument(app, config);
 
-    // Use minimal configuration for Vercel serverless
-    SwaggerModule.setup('api/docs', app, document, {
-      swaggerOptions: {
-        url: '/api/docs-json',
-        persistAuthorization: true,
-        displayRequestDuration: true,
-        docExpansion: 'list',
-        filter: true,
-        showExtensions: true,
-        showCommonExtensions: true,
-        tryItOutEnabled: true,
-      },
-      customSiteTitle: 'Pademi API Documentation',
-      customCss: '.swagger-ui .topbar { display: none }',
+    // Create custom Swagger HTML that loads CDN resources directly
+    expressApp.get('/api/docs', (req, res) => {
+      const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pademi API Documentation</title>
+        <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+        <style>
+          .swagger-ui .topbar { display: none; }
+          .swagger-ui .info { margin: 50px 0; }
+          body { margin: 0; background: #fafafa; }
+        </style>
+      </head>
+      <body>
+        <div id="swagger-ui"></div>
+        <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+        <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"></script>
+        <script>
+          window.onload = function() {
+            const ui = SwaggerUIBundle({
+              url: '/api/docs-json',
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+              ],
+              layout: "StandaloneLayout",
+              persistAuthorization: true,
+              displayRequestDuration: true,
+              docExpansion: 'list',
+              filter: true,
+              tryItOutEnabled: true
+            });
+          };
+        </script>
+      </body>
+      </html>`;
+      res.send(html);
+    });
+
+    // Setup docs-json endpoint
+    expressApp.get('/api/docs-json', (req, res) => {
+      res.json(document);
     });
 
     await app.init();
