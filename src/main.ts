@@ -48,14 +48,7 @@ async function bootstrapServer() {
         tagsSorter: 'alpha',
         operationsSorter: 'alpha',
       },
-
       customSiteTitle: 'Pademi Documentation',
-      customfavIcon: '/favicon.ico',
-      customJs: [
-        'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js',
-        'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js',
-      ],
-      customCssUrl: ['https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css'],
     });
 
     await app.init();
@@ -112,12 +105,6 @@ async function bootstrap() {
       operationsSorter: 'alpha',
     },
     customSiteTitle: 'Pademi Documentation',
-    customfavIcon: '/favicon.ico',
-    customJs: [
-      'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js',
-      'https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js',
-    ],
-    customCssUrl: ['https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css'],
   });
 
   const port = process.env.PORT || 3000;
