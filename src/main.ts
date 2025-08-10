@@ -42,13 +42,21 @@ async function bootstrapServer() {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
+
+    // Use minimal configuration for Vercel serverless
     SwaggerModule.setup('api/docs', app, document, {
       swaggerOptions: {
+        url: '/api/docs-json',
         persistAuthorization: true,
-        tagsSorter: 'alpha',
-        operationsSorter: 'alpha',
+        displayRequestDuration: true,
+        docExpansion: 'list',
+        filter: true,
+        showExtensions: true,
+        showCommonExtensions: true,
+        tryItOutEnabled: true,
       },
-      customSiteTitle: 'Pademi Documentation',
+      customSiteTitle: 'Pademi API Documentation',
+      customCss: '.swagger-ui .topbar { display: none }',
     });
 
     await app.init();
