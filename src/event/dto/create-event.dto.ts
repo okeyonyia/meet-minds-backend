@@ -14,7 +14,7 @@ export class CreateEventDto {
   host_id: string;
 
   @IsString()
-  event_type: string;
+  restaurant_id: string;
 
   @IsString()
   title: string;

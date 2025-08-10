@@ -10,8 +10,10 @@ export class Event {
   @Prop({ type: Types.ObjectId, required: true, ref: 'Profile' })
   host_id: Types.ObjectId;
 
-  @Prop({ required: true })
-  event_type: string;
+  @Prop({ type: Types.ObjectId, ref: 'Restaurant', required: true })
+  restaurant_id: Types.ObjectId;
+
+
 
   @Prop({ required: true })
   title: string;

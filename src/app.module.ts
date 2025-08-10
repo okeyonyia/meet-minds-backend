@@ -5,14 +5,15 @@ import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ProfileModule } from './profile/profile.module';
 import { EventModule } from './event/event.module';
 import { EventParticipationModule } from './event-participation/event-participation.module';
 import { PaymentModule } from './payment/payment.module';
 import { KycModule } from './kyc/kyc.module';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { RestaurantModule } from './restaurant/restaurant.module';
+import { PersonalDiningModule } from './personal-dining/personal-dining.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     EventParticipationModule,
     PaymentModule,
     KycModule,
+    RestaurantModule,
+    PersonalDiningModule,
   ],
   controllers: [AppController],
   providers: [

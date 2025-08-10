@@ -12,6 +12,8 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { Event, EventDocument } from './schema/event.schema';
 import { Profile, ProfileDocument } from 'src/profile/schema/profile.schema';
+import { Restaurant, RestaurantDocument } from 'src/restaurant/schema/restaurant.schema';
+import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { JoinEventDto } from './dto/join-event.dto';
 import { EventParticipationService } from 'src/event-participation/event-participation.service';
 import {
@@ -22,16 +24,19 @@ import { CreateEventReviewDto } from './dto/create-event-review.dto';
 import { SuggestEventDto } from './dto/suggest-event.dto';
 import * as geolib from 'geolib';
 import stringSimilarity from 'string-similarity';
+import { TimeSlot, createTimeSlotQuery } from '../common/enums/time-slot.enum';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
     @InjectModel(Profile.name) private profileModel: Model<ProfileDocument>,
+    @InjectModel(Restaurant.name) private restaurantModel: Model<RestaurantDocument>,
     @InjectModel(EventParticipation.name)
     private eventParticipationModel: Model<EventParticipationDocument>,
 
     private readonly eventParticipationService: EventParticipationService,
+    private readonly restaurantService: RestaurantService,
   ) {}
 
   async createEvent(
@@ -42,6 +47,14 @@ export class EventService {
       if (!profile) {
         throw new NotFoundException(
           `Profile with ID ${createEventDto.host_id} not found`,
+        );
+      }
+
+      // Validate restaurant exists
+      const restaurant = await this.restaurantModel.findById(createEventDto.restaurant_id);
+      if (!restaurant) {
+        throw new NotFoundException(
+          `Restaurant with ID ${createEventDto.restaurant_id} not found`,
         );
       }
 
@@ -57,10 +70,19 @@ export class EventService {
 
       await newEvent.save();
 
+      // Add to restaurant's active public events for map display if event is public
+      if (createEventDto.is_public) {
+        await this.restaurantService.addActivePublicEvent(
+          createEventDto.restaurant_id,
+          newEvent._id.toString(),
+        );
+      }
+
       // Populating host info
       const populatedEvent = await this.eventModel
         .findById(newEvent._id)
         .populate('host_id', 'full_name profile_pictures')
+        .populate('restaurant_id', 'name location operating_hours contact_info')
         .exec();
 
       return { message: 'Event Created Successfully', data: populatedEvent };
@@ -147,6 +169,14 @@ export class EventService {
                 }
                 break;
 
+              case 'time_slot':
+                // Filter by time slot (morning, afternoon, night)
+                if (Object.values(TimeSlot).includes(value as TimeSlot)) {
+                  const timeSlotQuery = createTimeSlotQuery(value as TimeSlot, 'start_time');
+                  Object.assign(query, timeSlotQuery);
+                }
+                break;
+
               default:
                 // 🔹 Auto-apply regex for partial matching on all string fields
                 query[key] =
@@ -167,6 +197,7 @@ export class EventService {
         .skip((page - 1) * limit)
         .limit(limit)
         .populate('host_id', 'full_name profile_pictures')
+        .populate('restaurant_id', 'name location operating_hours contact_info')
         .exec();
 
       if (!events || events.length === 0) {
@@ -292,11 +323,44 @@ export class EventService {
     updateEventDto: UpdateEventDto,
   ): Promise<{ message: string; data: Event }> {
     try {
+      // Get the original event to check its current state
+      const originalEvent = await this.eventModel.findById(id).exec();
+      if (!originalEvent) throw new NotFoundException('Event not found');
+
       const updatedEvent = await this.eventModel
         .findByIdAndUpdate(id, updateEventDto, { new: true })
         .populate('host_id', 'full_name profile_pictures')
         .exec();
       if (!updatedEvent) throw new NotFoundException('Event not found');
+
+      // Handle active public events changes
+      const wasPublic = originalEvent.is_public;
+      const isNowPublic = updatedEvent.is_public;
+      const restaurantChanged = originalEvent.restaurant_id.toString() !== updatedEvent.restaurant_id.toString();
+
+      if (wasPublic && !isNowPublic) {
+        // Event was public but now private - remove from active public events
+        await this.restaurantService.removeActivePublicEvent(
+          originalEvent.restaurant_id.toString(),
+          id,
+        );
+      } else if (!wasPublic && isNowPublic) {
+        // Event was private but now public - add to active public events
+        await this.restaurantService.addActivePublicEvent(
+          updatedEvent.restaurant_id.toString(),
+          id,
+        );
+      } else if (wasPublic && isNowPublic && restaurantChanged) {
+        // Event stayed public but restaurant changed - update both restaurants
+        await this.restaurantService.removeActivePublicEvent(
+          originalEvent.restaurant_id.toString(),
+          id,
+        );
+        await this.restaurantService.addActivePublicEvent(
+          updatedEvent.restaurant_id.toString(),
+          id,
+        );
+      }
 
       return { message: 'Event updated successfully', data: updatedEvent };
     } catch (error) {
@@ -318,6 +382,14 @@ export class EventService {
       if (!profile) {
         throw new NotFoundException(
           `Profile with ID ${event.host_id} not found`,
+        );
+      }
+
+      // Remove from active public events if it's a public event
+      if (event.is_public) {
+        await this.restaurantService.removeActivePublicEvent(
+          event.restaurant_id.toString(),
+          id,
         );
       }
 

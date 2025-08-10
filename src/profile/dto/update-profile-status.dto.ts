@@ -1,4 +1,4 @@
-import { IsEnum, IsEmail, IsString } from 'class-validator';
+import { IsEnum, IsEmail } from 'class-validator';
 import { ApprovedByAdminStatus } from '../schema/profile.schema';
 
 export class UpdateProfileStatusDto {
