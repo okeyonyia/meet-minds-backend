@@ -5,12 +5,23 @@ import { readFileSync } from 'fs';
 
 config();
 
-const email = process.argv[2] || 'mohdsakib@krapton.com';
+// Get email from command line argument or environment variable
+const email = process.argv[2] || process.env.ADMIN_EMAIL;
 
+// Check if email is provided
+if (!email) {
+  console.error('❌ Error: No email provided');
+  console.log('Usage options:');
+  console.log('  1. Command line: npm run admin:set your@email.com');
+  console.log('  2. Environment variable: Set ADMIN_EMAIL in your .env file');
+  process.exit(1);
+}
+
+// Validate email format
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 if (!emailRegex.test(email)) {
   console.error('❌ Error: Invalid email format');
-  console.log('Usage: node setAdminClaim.mjs [email@example.com]');
+  console.log('Usage: npm run admin:set your@email.com');
   process.exit(1);
 }
 
