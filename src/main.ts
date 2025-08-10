@@ -32,6 +32,24 @@ async function bootstrapServer() {
       credentials: true,
     });
 
+    const config = new DocumentBuilder()
+      .setTitle('Pademi')
+      .setDescription(
+        'Meet Minds Backend API Documentation - Social Events and Dining Experiences Platform',
+      )
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
+      },
+    });
+
     await app.init();
     cachedServer = expressApp;
   }
@@ -62,7 +80,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Pademi')
     .setDescription(
-      'Meet Minds Backend API Documentation - Social Events and Dining Experiences Platform',
+      'Pademi Backend API Documentation - Social Events and Dining Experiences Platform',
     )
     .setVersion('1.0')
     .addTag('authentication', 'User authentication endpoints')
