@@ -3,13 +3,11 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
   HttpStatus,
   Param,
   Patch,
   Post,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';

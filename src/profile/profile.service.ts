@@ -278,8 +278,10 @@ export class ProfileService {
       if (error instanceof NotFoundException || HttpException) {
         throw error;
       }
-      console.log(error);
-      throw new InternalServerErrorException('Failed to update profile.');
+
+      throw new InternalServerErrorException(
+        error.message || 'Failed to update profile.',
+      );
     }
   }
   /**

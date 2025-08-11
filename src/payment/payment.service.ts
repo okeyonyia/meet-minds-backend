@@ -104,8 +104,6 @@ export class PaymentService {
         },
       );
 
-      console.log('Response from paystack => ', response);
-
       if (!response.data.status) {
         throw new HttpException(response.data.message, HttpStatus.BAD_REQUEST);
       }
@@ -138,10 +136,7 @@ export class PaymentService {
 
       return { message: 'Payment verification failed.', statusCode: 200 };
     } catch (error) {
-      throw new HttpException(
-        'Payment verification failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

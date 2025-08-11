@@ -68,8 +68,7 @@ export class EventService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.log(error);
-      throw new BadRequestException('Error creating event');
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -183,7 +182,7 @@ export class EventService {
         totalCount: totalCount ?? 0,
       };
     } catch (error: any) {
-      throw new BadRequestException('Events not found');
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -232,7 +231,7 @@ export class EventService {
 
       return { message: 'Events retrieved successfully', data: events };
     } catch (error) {
-      throw new BadRequestException('Failed to retrieve events');
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -254,7 +253,7 @@ export class EventService {
 
       return { message: 'Event retrieved successfully', data: event };
     } catch (error) {
-      throw new NotFoundException('Error finding event');
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -659,7 +658,7 @@ export class EventService {
   ): Promise<{ message: string; statusCode: number; data: Event[] | null }> {
     try {
       const { profile_id, available_from, available_to } = data;
-      const now = new Date();
+      // const now = new Date();
       const MAX_DISTANCES = [32187, 48280, 80467]; // 20, 30, 50 miles in meters
 
       const profile = await this.profileModel.findById(profile_id);
@@ -818,7 +817,7 @@ export class EventService {
       }
 
       // Fallback: return first available non-pending, non-attending event
-      const fallback = allUpcomingEvents[0];
+      // const fallback = allUpcomingEvents[0];
       return {
         message: 'Fallback event returned (no match within distance)',
         statusCode: HttpStatus.OK,
