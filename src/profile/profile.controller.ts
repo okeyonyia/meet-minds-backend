@@ -12,14 +12,13 @@ import { ProfileService } from './profile.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateProfileStatusDto } from './dto/update-profile-status.dto';
-import { Public } from '../auth/decorators/public.decorator';
+
 // import { ApprovedByAdminStatus } from './schema/profile.schema';
 
 @Controller('profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  @Public()
   @Post()
   async createProfile(@Body() createProfileDto: CreateProfileDto) {
     const response = await this.profileService.createProfile(createProfileDto);
