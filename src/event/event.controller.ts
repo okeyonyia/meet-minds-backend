@@ -3,13 +3,11 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
   HttpStatus,
   Param,
   Patch,
   Post,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -19,6 +17,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { JoinEventDto } from './dto/join-event.dto';
 import { CreateEventReviewDto } from './dto/create-event-review.dto';
 import { SuggestEventDto } from './dto/suggest-event.dto';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('event')
 export class EventController {
@@ -100,6 +99,7 @@ export class EventController {
     };
   }
 
+  @Public()
   @Get(':id')
   async findEventById(@Param('id') id: string) {
     const response = await this.eventService.findEventById(id);
@@ -110,6 +110,7 @@ export class EventController {
     };
   }
 
+  @Public()
   @Get('/reviews/:id')
   @Get()
   async getReviews(@Param('id') id: string, @Query('top') top?: number) {

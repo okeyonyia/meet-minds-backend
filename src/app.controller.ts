@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Profile, ProfileDocument } from './profile/schema/profile.schema';
 import { Model } from 'mongoose';
+import { Public } from './auth/decorators/public.decorator';
 
 @Controller()
 export class AppController {
@@ -31,6 +32,7 @@ export class AppController {
     };
   }
 
+  @Public()
   @Get()
   getHello(): string {
     return this.appService.getHello();
